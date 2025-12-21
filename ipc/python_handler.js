@@ -1,11 +1,109 @@
 const { ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
-const TcpClientManager = require('../tcp/tcpClient');
-const { getFreePort } = require('../utils/portUtils');
+const net = require('net');
 
 let pythonProcess = null;
 let tcpClientManager = null;
+
+
+function getFreePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.listen(0, () => {
+      const { port } = server.address();
+      server.close(() => resolve(port));
+    });
+    server.on("error", reject);
+  });
+}
+
+
+class TcpClientManager {
+  constructor() {
+    this.client = null;
+    this.connected = false;
+    this.dataBuffer = '';
+    this.messageBuffer = ''; // For handling partial messages
+  }
+
+  connect(host, port, onData, onMessage, onComplete, onError, onClose) {
+    return new Promise((resolve, reject) => {
+      this.client = new net.Socket();
+      
+      this.client.connect(port, host, () => {
+        console.log(`TCP client connected to ${host}:${port}`);
+        this.connected = true;
+        resolve();
+      });
+
+      this.client.on('data', (data) => {
+        const chunk = data.toString();
+        this.dataBuffer += chunk;
+        this.messageBuffer += chunk;
+        
+        // Send raw data to renderer (for debugging)
+        if (onData) onData(chunk);
+        
+        // Parse complete messages (delimited by newline)
+        while (this.messageBuffer.includes('\n')) {
+          const newlineIndex = this.messageBuffer.indexOf('\n');
+          const message = this.messageBuffer.substring(0, newlineIndex);
+          this.messageBuffer = this.messageBuffer.substring(newlineIndex + 1);
+          
+          // Try to parse as JSON and send to onMessage callback
+          if (message.trim() && onMessage) {
+            try {
+              const jsonMessage = JSON.parse(message);
+              onMessage(jsonMessage);
+            } catch (e) {
+              console.warn('Received non-JSON message:', message);
+              onMessage({ raw: message });
+            }
+          }
+        }
+      });
+
+      this.client.on('end', () => {
+        console.log('TCP connection ended');
+        this.connected = false;
+        
+        if (this.connected && onComplete) {
+            onComplete()
+        };
+      });
+
+      this.client.on('close', () => {
+        console.log('TCP connection closed');
+        this.connected = false;
+        if (this.connected && onClose) {
+            onClose()
+        };
+      });
+
+      this.client.on('error', (err) => {
+        console.error('TCP client error:', err);
+        if (onError) {
+            onError(err);
+        }
+        this.connected = false;
+        
+        reject(err);
+      });
+
+      
+    });
+  }
+
+  sendInterrupt() {
+    if (this.client && this.connected) {
+      console.log('Sending interrupt message');
+      const interruptMessage = JSON.stringify({ command: 'interrupt' }) + '\n';
+      this.client.write(interruptMessage);
+      return true;
+    }
+    }
+}
 
 function setupPythonScriptHandlers(store, enginePath) {
   
