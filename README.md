@@ -22,6 +22,10 @@ npm install
 npm run electron:serve
 ```
 
+^ If this doesn't open an electron window on your desktop, try using two terminal tabs and run:
+- `npm run dev`
+- `npm run electron:start`
+
 ## Technologies Used
 
 - Electron
