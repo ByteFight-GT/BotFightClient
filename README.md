@@ -1,6 +1,6 @@
 ## About
 
-This is the downloadable frontend client for ByteFight. This app was built using Electron and allows players to test their bots, replay matches, and build their own maps.
+This is the downloadable desktop client for ByteFight, an Electron app for participants to test their bots locally, replay matches, and build their own maps.
 
 ## Getting Started
 
