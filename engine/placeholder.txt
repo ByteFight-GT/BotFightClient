@@ -1,0 +1,1 @@
+copypaste everything inside dist/dist client from the engine repo into this folder!
