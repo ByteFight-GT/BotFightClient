@@ -45,6 +45,14 @@ function setupFileHandlers(dataFilePath, enginePath) {
     }
   });
 
+  ipcMain.handle('dialog:selectFile', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+    });
+    return result.filePaths[0];
+  });
+
+
   ipcMain.handle('dialog:selectFolder', async () => {
     const result = await dialog.showOpenDialog({
       properties: ['openDirectory'],
@@ -59,7 +67,7 @@ function setupFileHandlers(dataFilePath, enginePath) {
   });
 
   ipcMain.handle('delete-maps', async (event) => {
-    const ogResponse = await fs.readFile(path.join(enginePath, '_internal', 'maps.json'));
+    const ogResponse = await fs.readFile(path.join(enginePath, 'config', 'maps.json'));
     const originalMaps = JSON.parse(ogResponse);
     
     const mapPairs = {};

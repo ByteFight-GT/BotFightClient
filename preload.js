@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electron', {
 
     deleteMap: (mapName) => ipcRenderer.invoke('delete-map', mapName),
     deleteMaps: () => ipcRenderer.invoke('delete-maps'),
+    selectFile: () => ipcRenderer.invoke('dialog:selectFile'),
     selectFolder: () => ipcRenderer.invoke('dialog:selectFolder'),
 
     // match handlers

@@ -16,60 +16,48 @@ const matchPath = path.join(userDataPath, 'match_runs');
 
 let enginePath;
 if (app.isPackaged) {
-  enginePath = path.join(process.resourcesPath, 'engine');
+    enginePath = path.join(process.resourcesPath, 'engine');
 } else {
-  enginePath = path.join(app.getAppPath(), 'engine');
+    enginePath = path.join(app.getAppPath(), 'engine');
 }
 
 
 async function initMaps() {
     // initialize maps
     let mapPairs = {}
-    try{
-        await fs.stat(dataFilePath)
-
-        let response = await fs.readFile(dataFilePath, 'utf8');
-        mapPairs = JSON.parse(response);
-        
-    }catch (error){
-
+    if(store.has('maps')){
+        mapPairs = store.get('maps')
     }
+
     let ogResponse = await fs.readFile(path.join(enginePath, 'config', 'maps.json'));
     let originalMaps = JSON.parse(ogResponse);
-    
+
     Object.keys(originalMaps).forEach(key => {
         mapPairs[key] = originalMaps[key];
     });
-    
-    store.set("maps", mapPairs)
-    
-  }
 
-async function initMetadata(){
-    let metadata = {
-        "numMatches":0,
-        "pythonpath":""
+    store.set("maps", mapPairs)
+}
+
+async function initMetadata() {
+
+    if(!store.has('numMatches')){
+        store.set("numMatches", 0)
     }
-    try{
-        await fs.stat(metaFilePath)
-        let response = await fs.readFile(metaFilePath, 'utf8');
-        metadata = JSON.parse(response);
-    }catch (error){
-        
+    if(!store.has('pythonpath')){
+        store.set("pythonpath", '')
     }
-    
-    store.set("pythonpath", metadata["pythonpath"])
-    store.set("numMatches", metadata["numMatches"]);
+   
     store.set("matchDir", matchPath);
 
-    try{
+    try {
         await fs.access(matchPath);
-    } catch{
+    } catch {
         await fs.mkdir(matchPath, { recursive: true }, (err) => {
             if (err) {
-              console.error('Error creating directory:', err);
+                console.error('Error creating directory:', err);
             } else {
-              console.log('Directory created successfully!');
+                console.log('Directory created successfully!');
             }
         })
 
@@ -77,15 +65,15 @@ async function initMetadata(){
 }
 
 function createWindow() {
-  win = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-    }
-  });
+    win = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
+        }
+    });
 
     require('@electron/remote/main').enable(win.webContents)
 
@@ -93,7 +81,7 @@ function createWindow() {
     if (!app.isPackaged) {
         win.loadURL('http://localhost:3000')  // URL served by your dev server (like React's dev server)
     } else {
-        console.log(`file://${path.join(__dirname,  'index.html')}`)
+        console.log(`file://${path.join(__dirname, 'index.html')}`)
         win.loadURL(`file://${path.join(__dirname, 'index.html')}`);
     }
 
@@ -103,52 +91,40 @@ function createWindow() {
 }
 
 app.on('ready', async () => {
-  // Initialize store
-  const Store = (await import('electron-store')).default;
-  store = new Store();
-  
-  await initMaps(dataFilePath, enginePath, store);
-  await initMetadata(metaFilePath, store);
-  
-  // Setup all IPC handlers
-  setupAllHandlers(store, enginePath, matchPath, dataFilePath);
-  
-  createWindow();
+    // Initialize store
+    const Store = (await import('electron-store')).default;
+    store = new Store();
+
+    await initMaps(dataFilePath, enginePath, store);
+    await initMetadata(metaFilePath, store);
+    console.log(metaFilePath)
+
+    // Setup all IPC handlers
+    setupAllHandlers(store, enginePath, matchPath, dataFilePath);
+
+    createWindow();
 });
 
-app.on('before-quit', async () => {
-  let num = 0;
-  let maps = {};
-  let pythonpath = "";
-  
-  if (store) {
-    num = store.get("numMatches") || 0;
-    maps = store.get("maps") || {};
-    pythonpath = store.get("pythonpath") || "";
-  }
+app.on('before-quit', async (event) => {
 
-  console.log("Writing data files");
-  await fs.writeFile(dataFilePath, JSON.stringify(maps, null, 2));
-  await fs.writeFile(metaFilePath, JSON.stringify({
-    numMatches: num,
-    pythonpath: pythonpath
-  }, null, 2));
+    event.preventDefault(); // otherwise writing out will never occur
 
+    console.log("Exiting python");
+    // Cleanup Python process
+    closeTCPClient();
+    closePython();
 
-  console.log("Exiting python");
-  // Cleanup Python process
-  closeTCPClient();
-  closePython();
+    app.exit(0);
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
 app.on('activate', () => {
-  if (win === null) {
-    createWindow();
-  }
+    if (win === null) {
+        createWindow();
+    }
 });

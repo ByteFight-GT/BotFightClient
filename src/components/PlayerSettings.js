@@ -1,13 +1,26 @@
+import { useState, useEffect } from 'react';
+
 export default function PlayerSettings() {
 
     const [pythonPath, setPythonPath] = useState('');
 
     const handleSelectPythonPath = async () => {
-        const path = await window.electron.selectFolder(); // or selectFile
+        const path = await window.electron.selectFile(); // or selectFile
         if (path) {
+            await window.electron.storeSet("pythonpath", path)
             setPythonPath(path);
         }
     };
+
+    useEffect(() => {
+        const loadPythonPath = async () => {
+            const storedPath = await window.electron.storeGet('pythonpath');
+            if (storedPath) {
+                setPythonPath(storedPath);
+            }
+        };
+        loadPythonPath();
+    }, []);
 
 
     return (
@@ -33,11 +46,11 @@ export default function PlayerSettings() {
                         />
                     </svg>
                     <span className="text-xl font-semibold">Click to Select Python Executable</span>
-                    {pythonPath && (
+                    {/* {pythonPath && (
                         <span className="text-sm text-zinc-400 break-all text-center max-w-[450px]">
                             {pythonPath}
                         </span>
-                    )}
+                    )} */}
                 </button>
 
                 {pythonPath && (
@@ -48,6 +61,7 @@ export default function PlayerSettings() {
                         </p>
                     </div>
                 )}
+
             </div>
         </div>
     )
