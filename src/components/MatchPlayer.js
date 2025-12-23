@@ -73,6 +73,14 @@ function MatchPlayer() {
     setBot2File(bot2File);
     setShouldPlayMatch(true);
   }
+  
+  const tcpJSONCallback = () => {
+
+  }
+
+  const tcpStatusCallback = () => {
+    
+  }
 
   useEffect(() => {
     let interval;
@@ -112,7 +120,9 @@ function MatchPlayer() {
           '--map_string', `"${map}"`,
           '--output_dir', `"${resultFilePath}"`
         ];
-        setEngineOutput(await window.electron.runPythonScript(scriptArgs));
+
+        
+        const result = await window.electron.runPythonScript(scriptArgs);
 
         try {
           const resultFileContent = await window.electron.readFile(resultFilePath);
