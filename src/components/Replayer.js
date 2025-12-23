@@ -9,6 +9,8 @@ import { processData } from "../replay/process_replay"
 import MatchSelector from './MatchSelector'
 import PlayerStats from './PlayerStats'
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast'
+
 
 function Replayer() {
   const [currentMatchStateIndex, setCurrentMatchStateIndex] = useState(0);
@@ -19,6 +21,8 @@ function Replayer() {
   const [matches, setMatches] = useState([]);
   const [updateOptions, setUpdateOptions] = useState(true);
   const [matchInfo, setMatchInfo] = useState(null)
+
+  const { toast } = useToast();
 
   const clearAllUseStates = () => {
     setCurrentMatchStateIndex(0);
@@ -105,7 +109,10 @@ function Replayer() {
     setMatchId(null)
     await window.electron.deleteMatch(matchId);
     setUpdateOptions(true);
-    alert("Match deleted!");
+    toast({
+      title: "Success",
+      description: "Match deleted!",
+    })
 
 
   }
@@ -115,7 +122,10 @@ function Replayer() {
     setMatchId(null);
     await window.electron.deleteMatches();
     setUpdateOptions(true);
-    alert("Matches deleted!");
+    toast({
+      title: "Success",
+      description: "All matches deleted!",
+    })
 
   }
 

@@ -10,8 +10,6 @@ let win;
 let store;
 
 const userDataPath = app.getPath('userData');
-const metaFilePath = path.join(userDataPath, 'meta.json');
-const dataFilePath = path.join(userDataPath, 'maps.json');
 const matchPath = path.join(userDataPath, 'match_runs');
 
 let enginePath;
@@ -95,12 +93,11 @@ app.on('ready', async () => {
     const Store = (await import('electron-store')).default;
     store = new Store();
 
-    await initMaps(dataFilePath, enginePath, store);
-    await initMetadata(metaFilePath, store);
-    console.log(metaFilePath)
+    await initMaps();
+    await initMetadata();
 
     // Setup all IPC handlers
-    setupAllHandlers(store, enginePath, matchPath, dataFilePath);
+    setupAllHandlers(store, enginePath, matchPath);
 
     createWindow();
 });

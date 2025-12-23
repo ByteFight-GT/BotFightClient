@@ -13,7 +13,7 @@ function setupElectronStoreHandlers(store) {
 }
 
 
-function setupFileHandlers(dataFilePath, enginePath) {
+function setupFileHandlers(store,  enginePath) {
   
   ipcMain.handle('read-file', async (event, filePath) => {
     try {
@@ -24,26 +24,6 @@ function setupFileHandlers(dataFilePath, enginePath) {
     }
   });
 
-  ipcMain.handle('read-map', async (event) => {
-    try {
-      console.log(dataFilePath);
-      const data = await fs.readFile(dataFilePath, 'utf8');
-      console.log(data);
-      return data;
-    } catch (error) {
-      throw new Error(`Failed to read file: ${error.message}`);
-    }
-  });
-
-  ipcMain.handle('write-map', async (event, data) => {
-    try {
-      await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2));
-      return { success: true };
-    } catch (error) {
-      console.error('Error writing to JSON file:', error);
-      return { success: false, error: error.message };
-    }
-  });
 
   ipcMain.handle('dialog:selectFile', async () => {
     const result = await dialog.showOpenDialog({

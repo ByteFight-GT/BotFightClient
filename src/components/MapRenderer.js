@@ -6,6 +6,7 @@ import CellSelector from './CellSelector'
 import SymmetrySelector from './SymmetrySelector'
 import { Button } from '@/components/ui/button';
 import Selector from './Selector';
+import { useToast } from '@/hooks/use-toast'
 
 const GridValues = {
   EMPTY: 0,
@@ -20,6 +21,7 @@ const GridValues = {
 }
 
 export default function MapRenderer() {
+  
   const [showSnakeStart, setShowSnakeStart] = useState(true);
   const [aSpawn, setASpawn] = useState([-1, -1]);
   const [bSpawn, setBSpawn] = useState([-1, -1]);
@@ -36,6 +38,7 @@ export default function MapRenderer() {
   const [mapName, setMapName] = useState("")
   const [startPortal, setStartPortal] = useState([-1, -1])
   const [endPortal, setEndPortal] = useState([-1, -1])
+  const { toast } = useToast();
 
   const min_map = 1;
   const max_map = 64;
@@ -166,7 +169,10 @@ export default function MapRenderer() {
 
       try {
         await window.electron.storeSet("maps", mapPairs);  // Send data to Electron to write to file
-        alert("Map saved successfully!");
+        toast({
+          title: "Success",
+          description: "Map saved successfully!",
+        })
         setMapJustSaved(true);
       } catch (error) {
         console.error('Error:', error);
@@ -235,7 +241,10 @@ export default function MapRenderer() {
 
     let generated_string = getMapString();
     navigator.clipboard.writeText(generated_string).then(() => {
-      alert("Map string copied to clipboard!");
+      toast({
+        title: "Success",
+        description: "Map string copied to clipboard!",
+      })
     });
     return generated_string;
 
@@ -414,7 +423,10 @@ export default function MapRenderer() {
     delete maps[map]
 
     setMaps(maps)
-    alert("Map deleted!")
+    toast({
+      title: "Success",
+      description: "Map deleted!",
+    })
     setMap(null);
   }
 
@@ -423,7 +435,11 @@ export default function MapRenderer() {
     const mapPairs = await window.electron.storeGet("maps")
     setMaps(mapPairs)
     setMap(null);
-    alert("Custom maps deleted!")
+    toast({
+      title: "Success",
+      description: "All custom maps deleted!",
+    })
+
   }
 
   useEffect(() => {

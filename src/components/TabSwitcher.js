@@ -3,6 +3,7 @@ import LocalRenderer from './LocalRenderer';
 import MapRenderer from './MapRenderer'
 import Replayer from './Replayer'
 import PlayerSettings from './PlayerSettings'
+import { Toaster } from "@/components/ui/toaster"
 
 function TabSwitcher() {
   const [activeTab, setActiveTab] = useState(0);  // State to track active tab
@@ -76,6 +77,7 @@ function TabSwitcher() {
             <PlayerSettings />
 
         )}
+        <Toaster />
       
     </div>
   );

@@ -7,8 +7,6 @@ contextBridge.exposeInMainWorld('electron', {
 
     //file/metadata handlers
     readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
-    readMap: () => ipcRenderer.invoke('read-map'),
-    writeMap: (mapPairs) => ipcRenderer.invoke('write-map', mapPairs),
 
     deleteMap: (mapName) => ipcRenderer.invoke('delete-map', mapName),
     deleteMaps: () => ipcRenderer.invoke('delete-maps'),
