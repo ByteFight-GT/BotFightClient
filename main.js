@@ -34,7 +34,7 @@ async function initMaps() {
     }catch (error){
 
     }
-    let ogResponse = await fs.readFile(path.join(enginePath, '_internal', 'maps.json'));
+    let ogResponse = await fs.readFile(path.join(enginePath, 'config', 'maps.json'));
     let originalMaps = JSON.parse(ogResponse);
     
     Object.keys(originalMaps).forEach(key => {

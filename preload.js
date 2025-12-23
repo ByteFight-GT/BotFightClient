@@ -1,7 +1,6 @@
 const { ipcRenderer, contextBridge } = require('electron');
 
-// expose ipc calls for electron
-window.electron = {
+contextBridge.exposeInMainWorld('electron', {
     //electron handlers
     storeSet: (key, value) => ipcRenderer.invoke('store-set', key, value),
     storeGet: (key) => ipcRenderer.invoke('store-get', key),
@@ -25,6 +24,6 @@ window.electron = {
 
     // python script handlers
     runPythonScript: (args, directoryPath) => ipcRenderer.invoke('run-python-script', args, directoryPath),
-    sendTCPInterrupt: (args, directoryPath) => ipcRenderer.invoke('tcp-send-interrupt'),
-    disconnectTCP: (args, directoryPath) => ipcRenderer.invoke('tcp-disconnect')
-};
+    sendTCPInterrupt: () => ipcRenderer.invoke('tcp-send-interrupt'),
+    disconnectTCP: () => ipcRenderer.invoke('tcp-disconnect')
+});
