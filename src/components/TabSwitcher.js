@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import LocalRenderer from './LocalRenderer';
-import MapRenderer from './MapRenderer'
 import Replayer from './Replayer'
 import PlayerSettings from './PlayerSettings'
 import { Toaster } from "@/components/ui/toaster"
+import MatchPlayer from './MatchPlayer';
+import MapBuilder from './MapBuilder'
 
 function TabSwitcher() {
   const [activeTab, setActiveTab] = useState(0);  // State to track active tab
@@ -60,11 +60,11 @@ function TabSwitcher() {
 
         {/* Tab Content */}
         {activeTab === 0 && (
-            <LocalRenderer />
+            <MatchPlayer />
         )}
         {activeTab === 1 && (
 
-            <MapRenderer />
+            <MapBuilder />
 
         )}
         {activeTab === 2 && (

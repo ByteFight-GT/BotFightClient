@@ -15,7 +15,7 @@ import { match } from 'assert';
 
 const path = require('path');
 
-function LocalRenderer() {
+function MatchPlayer() {
   const [currentMatchStateIndex, setCurrentMatchStateIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playSpeed, setPlaySpeed] = useState(50);
@@ -197,4 +197,4 @@ function LocalRenderer() {
     </div>
   );
 }
-export default LocalRenderer
+export default MatchPlayer

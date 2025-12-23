@@ -20,7 +20,7 @@ const GridValues = {
   END_PORTAL: 8
 }
 
-export default function MapRenderer() {
+export default function MapBuilder() {
   
   const [showSnakeStart, setShowSnakeStart] = useState(true);
   const [aSpawn, setASpawn] = useState([-1, -1]);
