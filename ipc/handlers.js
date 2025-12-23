@@ -2,7 +2,7 @@ const { ipcMain, dialog } = require('electron');
 const fs = require('fs').promises;
 const path = require('path');
 
-function setupElectronStoreHandlers(store) {
+function setupElectronStoreHandlers(store, enginePath) {
   ipcMain.handle('store-set', async (event, key, value) => {
     store.set(key, value);
   });
@@ -10,11 +10,29 @@ function setupElectronStoreHandlers(store) {
   ipcMain.handle('store-get', async (event, key) => {
     return store.get(key);
   });
+
+
+  ipcMain.handle('delete-map', async (event, map) => {
+    const maps = store.get("maps");
+    delete maps[map];
+    store.set("maps", maps);
+  });
+
+  ipcMain.handle('delete-maps', async (event) => {
+    const ogResponse = await fs.readFile(path.join(enginePath, 'config', 'maps.json'));
+    const originalMaps = JSON.parse(ogResponse);
+    
+    const mapPairs = {};
+    Object.keys(originalMaps).forEach(key => {
+      mapPairs[key] = originalMaps[key];
+    });
+    
+    store.set("maps", mapPairs);
+  });
 }
 
 
-function setupFileHandlers(store,  enginePath) {
-  
+function setupFileHandlers() {
   ipcMain.handle('read-file', async (event, filePath) => {
     try {
       const data = await fs.readFile(filePath, 'utf8');
@@ -40,23 +58,6 @@ function setupFileHandlers(store,  enginePath) {
     return result.filePaths[0];
   });
 
-    ipcMain.handle('delete-map', async (event, map) => {
-    const maps = store.get("maps");
-    delete maps[map];
-    store.set("maps", maps);
-  });
-
-  ipcMain.handle('delete-maps', async (event) => {
-    const ogResponse = await fs.readFile(path.join(enginePath, 'config', 'maps.json'));
-    const originalMaps = JSON.parse(ogResponse);
-    
-    const mapPairs = {};
-    Object.keys(originalMaps).forEach(key => {
-      mapPairs[key] = originalMaps[key];
-    });
-    
-    store.set("maps", mapPairs);
-  });
 }
 
 

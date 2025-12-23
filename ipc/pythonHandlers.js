@@ -219,7 +219,7 @@ function setupPythonScriptHandlers(store, enginePath) {
                             console.log('TCP data received');
                         },
                         (jsonData) => { // onMessage
-                            event.sender.send('stream-tcp-json', jsonData);
+                            event.sender.send('stream-tcp-message', jsonData);
                             console.log('TCP data parsed');
                             tcpResult = jsonData;
                         }, 

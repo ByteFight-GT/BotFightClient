@@ -24,5 +24,11 @@ contextBridge.exposeInMainWorld('electron', {
     // python script handlers
     runPythonScript: (args, directoryPath) => ipcRenderer.invoke('run-python-script', args, directoryPath),
     sendTCPInterrupt: () => ipcRenderer.invoke('tcp-send-interrupt'),
-    disconnectTCP: () => ipcRenderer.invoke('tcp-disconnect')
-});
+    disconnectTCP: () => ipcRenderer.invoke('tcp-disconnect'),
+
+
+    onTcpData: (callback) => ipcRenderer.on('stream-tcp-data', (_, data) => callback(data)),
+    onTcpJson: (callback) => ipcRenderer.on('stream-tcp-message', (_, data) => callback(data)),
+    onTcpStatus: (callback) => ipcRenderer.on('stream-tcp-status', (_, status) => callback(status)),
+    }
+);
