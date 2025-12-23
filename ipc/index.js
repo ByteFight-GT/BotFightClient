@@ -1,5 +1,5 @@
 const { setupElectronStoreHandlers, setupFileHandlers, setupMatchHandlers } = require('./handlers');
-const { setupPythonScriptHandlers} = require('./python_handler');
+const { setupPythonScriptHandlers} = require('./pythonHandlers');
 
 function setupAllHandlers(store, enginePath, matchPath, dataFilePath) {
   setupElectronStoreHandlers(store);

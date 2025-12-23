@@ -4,7 +4,7 @@ const fs = require('fs').promises;
 require('@electron/remote/main').initialize();
 
 const { setupAllHandlers } = require('./ipc');
-const { closePython, closeTCPClient } = require('./ipc/pythonScriptHandlers');
+const { closePython, closeTCPClient } = require('./ipc/pythonHandlers');
 
 let win;
 let store;
