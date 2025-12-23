@@ -1,13 +1,12 @@
-const { setupStorageHandlers } = require('./handlers');
-const { setupFileHandlers } = require('./python_handler');
+const { setupElectronStoreHandlers, setupFileHandlers, setupMatchHandlers } = require('./handlers');
+const { setupPythonScriptHandlers} = require('./python_handler');
 
 function setupAllHandlers(store, enginePath, matchPath, dataFilePath) {
-  const cleanupPython = setupPythonScriptHandlers(store, enginePath);
-  setupStorageHandlers(store);
-  setupFileHandlers(matchPath, dataFilePath, enginePath);
+  setupElectronStoreHandlers(store);
+  setupFileHandlers(dataFilePath, enginePath);
   setupMatchHandlers(matchPath);
-  
-  return cleanupPython; // Return cleanup function
+  setupPythonScriptHandlers(store, enginePath);
+
 }
 
 module.exports = { setupAllHandlers };

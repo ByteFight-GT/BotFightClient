@@ -6,7 +6,7 @@ const { ipcMain } = require('electron');
 const fs = require('fs').promises;
 const path = require('path');
 
-function setupStorageHandlers(store) {
+function setupElectronStoreHandlers(store) {
   ipcMain.handle('store-set', async (event, key, value) => {
     store.set(key, value);
   });
@@ -14,28 +14,10 @@ function setupStorageHandlers(store) {
   ipcMain.handle('store-get', async (event, key) => {
     return store.get(key);
   });
-
-  ipcMain.handle('delete-map', async (event, map) => {
-    const maps = store.get("maps");
-    delete maps[map];
-    store.set("maps", maps);
-  });
-
-  ipcMain.handle('delete-maps', async (event) => {
-    const ogResponse = await fs.readFile(path.join(enginePath, '_internal', 'maps.json'));
-    const originalMaps = JSON.parse(ogResponse);
-    
-    const mapPairs = {};
-    Object.keys(originalMaps).forEach(key => {
-      mapPairs[key] = originalMaps[key];
-    });
-    
-    store.set("maps", mapPairs);
-  });
 }
 
 
-function setupFileHandlers(matchPath, dataFilePath, enginePath) {
+function setupFileHandlers(dataFilePath, enginePath) {
   
   ipcMain.handle('read-file', async (event, filePath) => {
     try {
@@ -72,6 +54,24 @@ function setupFileHandlers(matchPath, dataFilePath, enginePath) {
       properties: ['openDirectory'],
     });
     return result.filePaths[0];
+  });
+
+    ipcMain.handle('delete-map', async (event, map) => {
+    const maps = store.get("maps");
+    delete maps[map];
+    store.set("maps", maps);
+  });
+
+  ipcMain.handle('delete-maps', async (event) => {
+    const ogResponse = await fs.readFile(path.join(enginePath, '_internal', 'maps.json'));
+    const originalMaps = JSON.parse(ogResponse);
+    
+    const mapPairs = {};
+    Object.keys(originalMaps).forEach(key => {
+      mapPairs[key] = originalMaps[key];
+    });
+    
+    store.set("maps", mapPairs);
   });
 }
 
@@ -134,4 +134,4 @@ function setupMatchHandlers(matchPath) {
   });
 }
 
-module.exports = { setupStorageHandlers, setupFileHandlers, setupMatchHandlers};
+module.exports = { setupElectronStoreHandlers, setupFileHandlers, setupMatchHandlers};

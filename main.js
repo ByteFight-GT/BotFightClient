@@ -1,14 +1,13 @@
 const { app, BrowserWindow } = require('electron');
-const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs').promises;
 require('@electron/remote/main').initialize();
 
 const { setupAllHandlers } = require('./ipc');
+const { closePython, closeTCPClient } = require('./ipc/pythonScriptHandlers');
 
 let win;
 let store;
-let cleanupPython;
 
 const userDataPath = app.getPath('userData');
 const metaFilePath = path.join(userDataPath, 'meta.json');
@@ -100,7 +99,7 @@ app.on('ready', async () => {
   await initMetadata(metaFilePath, store);
   
   // Setup all IPC handlers
-  cleanupPython = setupAllHandlers(store, enginePath, matchPath, dataFilePath);
+  setupAllHandlers(store, enginePath, matchPath, dataFilePath);
   
   createWindow();
 });
@@ -117,27 +116,9 @@ app.on('before-quit', async () => {
   }
 
   // Cleanup Python process
-  if (cleanupPython) {
-    cleanupPython();
-  }
+  closeTCPClient();
+  closePython();
   
-  const { getPythonProcess } = require('./ipc/pythonScriptHandlers');
-  const pythonProcess = getPythonProcess();
-  
-  if (pythonProcess && !pythonProcess.killed) {
-    console.log(`Killing process ${pythonProcess.pid}`);
-    if (process.platform === "win32") {
-      exec(`taskkill /PID ${pythonProcess.pid} /T /F`, (err) => {
-        if (err) console.error("Failed to kill process:", err);
-        else console.log("Process killed");
-      });
-    } else {
-      exec(`kill -9 ${pythonProcess.pid}`, (err) => {
-        if (err) console.error("Failed to kill process:", err);
-        else console.log("Process killed");
-      });
-    }
-  }
 
   console.log("Writing data files");
   await fs.writeFile(dataFilePath, JSON.stringify(maps, null, 2));

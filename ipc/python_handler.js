@@ -1,5 +1,5 @@
 const { ipcMain } = require('electron');
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const path = require('path');
 const net = require('net');
 
@@ -18,6 +18,33 @@ function getFreePort() {
     });
 }
 
+function closeTCPClient(){
+     if (tcpClientManager) {
+        tcpClientManager.disconnect();
+    }
+}
+
+function closePython(){
+    if (pythonProcess && !pythonProcess.killed) {
+        pythonProcess.kill();
+    }
+
+    if (pythonProcess && !pythonProcess.killed) {
+        console.log(`Killing process ${pythonProcess.pid}`);
+        if (process.platform === "win32") {
+          exec(`taskkill /PID ${pythonProcess.pid} /T /F`, (err) => {
+            if (err) console.error("Failed to kill process:", err);
+            else console.log("Process killed");
+          });
+        } else {
+          exec(`kill -9 ${pythonProcess.pid}`, (err) => {
+            if (err) console.error("Failed to kill process:", err);
+            else console.log("Process killed");
+          });
+        }
+    }
+}
+
 
 class TcpClientManager {
     constructor() {
@@ -29,14 +56,10 @@ class TcpClientManager {
 
     connect(host, port, onData, onMessage, onComplete, onError, onClose) {
         return new Promise((resolve, reject) => {
+            // crate tcp client
             this.client = new net.Socket();
 
-            this.client.connect(port, host, () => {
-                console.log(`TCP client connected to ${host}:${port}`);
-                this.connected = true;
-                resolve();
-            });
-
+            //start registering handlers
             this.client.on('data', (data) => {
                 const chunk = data.toString();
                 this.dataBuffer += chunk;
@@ -66,7 +89,7 @@ class TcpClientManager {
                 console.log('TCP connection ended');
                 this.connected = false;
 
-                if (this.connected && onComplete) {
+                if (onComplete) {
                     onComplete()
                 };
             });
@@ -74,7 +97,7 @@ class TcpClientManager {
             this.client.on('close', () => {
                 console.log('TCP connection closed');
                 this.connected = false;
-                if (this.connected && onClose) {
+                if (onClose) {
                     onClose()
                 };
             });
@@ -89,8 +112,23 @@ class TcpClientManager {
                 reject(err);
             });
 
+            // Actually connect
+            this.client.connect(port, host, () => {
+                console.log(`TCP client connected to ${host}:${port}`);
+                this.connected = true;
+                resolve();
+            });
+
 
         });
+    }
+
+    disconnect(){
+        if (this.client && this.connected) {
+            this.client.end()
+        }
+        this.connected = false
+
     }
 
     sendInterrupt() {
@@ -154,7 +192,6 @@ function setupPythonScriptHandlers(store, enginePath) {
                 event.sender.send('stream-complete', {
                     code,
                     stdout: scriptOutput,
-                    tcpData: tcpResult
                 });
 
                 if (code !== 0) {
@@ -184,6 +221,7 @@ function setupPythonScriptHandlers(store, enginePath) {
                         (jsonData) => { // onMessage
                             event.sender.send('stream-tcp-json', jsonData);
                             console.log('TCP data parsed');
+                            tcpResult = jsonData;
                         }, 
                         () => { // onComplete
                             event.sender.send('stream-tcp-status', "complete");
@@ -203,7 +241,7 @@ function setupPythonScriptHandlers(store, enginePath) {
         });
     });
 
-    ipcMain.handle('send-interrupt', async () => {
+    ipcMain.handle('tcp-send-interrupt', async (event) => {
         if (tcpClientManager) {
             return tcpClientManager.sendInterrupt();
         }
@@ -211,18 +249,22 @@ function setupPythonScriptHandlers(store, enginePath) {
     });
 
 
-    ipcMain.handle('tcp-connected', async () => {
-        return tcpClientManager ? tcpClientManager.connected : false;
-    });
-
-    return () => {
-        if (pythonProcess && !pythonProcess.killed) {
-            pythonProcess.kill();
-        }
+    ipcMain.handle('tcp-disconnect', async (event) => {
         if (tcpClientManager) {
-            tcpClientManager.disconnect();
+            tcpClientManager.disconnect()
         }
-    };
+        return False
+    });
 }
 
-module.exports = { setupPythonScriptHandlers, getPythonProcess: () => pythonProcess};
+
+
+
+
+module.exports = { 
+    setupPythonScriptHandlers, 
+    closePython,
+    closeTCPClient,
+    getPythonProcess: () => pythonProcess,
+    getTCPClient: () => tcpClientManager
+};
