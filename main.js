@@ -87,7 +87,19 @@ function createWindow() {
     }
   });
 
-  win.loadFile('index.html');
+    require('@electron/remote/main').enable(win.webContents)
+
+    // In your main Electron process (main.js or main.ts)
+    if (!app.isPackaged) {
+        win.loadURL('http://localhost:3000')  // URL served by your dev server (like React's dev server)
+    } else {
+        console.log(`file://${path.join(__dirname,  'index.html')}`)
+        win.loadURL(`file://${path.join(__dirname, 'index.html')}`);
+    }
+
+    if (!app.isPackaged) {
+        win.webContents.openDevTools()
+    }
 }
 
 app.on('ready', async () => {
