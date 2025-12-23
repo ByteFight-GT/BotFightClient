@@ -127,17 +127,18 @@ app.on('before-quit', async () => {
     pythonpath = store.get("pythonpath") || "";
   }
 
-  // Cleanup Python process
-  closeTCPClient();
-  closePython();
-  
-
   console.log("Writing data files");
   await fs.writeFile(dataFilePath, JSON.stringify(maps, null, 2));
   await fs.writeFile(metaFilePath, JSON.stringify({
     numMatches: num,
     pythonpath: pythonpath
   }, null, 2));
+
+
+  console.log("Exiting python");
+  // Cleanup Python process
+  closeTCPClient();
+  closePython();
 });
 
 app.on('window-all-closed', () => {
