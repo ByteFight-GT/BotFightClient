@@ -46,11 +46,12 @@ function MatchPlayer() {
 
   const handleSetMap = (value) => {
     setMap(value)
+    console.log(value)
 
-    let match_states = new Array(1).fill(null);
-    match_states[0] = getMap(value)
-    setMatchStates(match_states);
-    setCurrentMatchStateIndex(0);
+    // let match_states = new Array(1).fill(null);
+    // match_states[0] = getMap(value)
+    // setMatchStates(match_states);
+    // setCurrentMatchStateIndex(0);
     setMatchInfo(null)
 
   }
@@ -88,7 +89,7 @@ function MatchPlayer() {
   }
 
   const handleErrOutDataFull = (fullOutput) => {
-    console.log("errout");
+    console.log("erroutfull");
     console.log(fullOutput);
   }
 
