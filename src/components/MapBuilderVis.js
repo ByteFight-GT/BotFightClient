@@ -7,7 +7,7 @@ export default function MapBuilderVis({
   aSpawn,
   bSpawn,
   mapHeight, mapWidth, 
-  walls, hillMap,
+  walls, hillGrid,
   cellType,
   setTile,
   rerender
@@ -175,7 +175,7 @@ export default function MapBuilderVis({
           if(walls != null && walls[y][x]){
             drawWall(x, y);
           } 
-          else if(hillMap != null && hillMap[y][x] != 0){
+          else if(hillGrid != null && hillGrid[y][x] != 0){
             drawHill(x, y)
 
           }
@@ -210,7 +210,7 @@ export default function MapBuilderVis({
     mapHeight, 
     mapWidth, 
     walls, 
-    hillMap,
+    hillGrid,
     mouseCellX,
     mouseCellY,
     rerender

@@ -391,8 +391,8 @@ export default function MapBuilder() {
     if (walls == null) {
       setWalls(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(false)));
     }
-    if (hills == null) {
-      setHills(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(-1)));
+    if (hillGrid == null) {
+      setHillGrid(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(-1)));
     }
   }, []);
 
@@ -450,7 +450,7 @@ export default function MapBuilder() {
             <p htmlFor="appleRate" className="block text-zinc-300">Symmetry</p>
             <SymmetrySelector handleSymmetryChange={handleSymmetryChange} />
           </div>
-          <ShowSpawn showSnakeStart={showSpawn} handleShowSnakeStart={handleShowSnakeStart} />
+          <ShowSpawn showSnakeStart={showSpawn} handleShowSpawn={handleShowSpawn} />
         </div>
         <div className="flex flex-col items-center justify-start gap-3 pb-5 border-b border-zinc-700">
           <MapSettings
@@ -510,16 +510,14 @@ export default function MapBuilder() {
           >Copy Map String</Button>
 
         </div>
-        <MapVis
-          showSnakeStart={showSpawn}
+        <MapBuilderVis
+          showSpawn={showSpawn}
           aSpawn={aSpawn}
           bSpawn={bSpawn}
-          startPortal={startPortal}
-          endPortal={endPortal}
           mapHeight={mapHeight}
           mapWidth={mapWidth}
           walls={walls}
-          portals={hills}
+          hillMap={hillGrid}
           cellType={cellType}
           setTile={setTile}
           rerender={canvasRerender}

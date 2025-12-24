@@ -33,7 +33,7 @@ function MapSettings({
       </div>
 
       <div className="flex flex-row gap-2 items-center justify-end w-full">
-        <label htmlFor="powerupRate" className="block text-zinc-300">Apple Spawn Rate</label>
+        <label htmlFor="powerupRate" className="block text-zinc-300">Spawn Rate</label>
         <input
           id="powerupRate"
           type="number"
@@ -45,24 +45,24 @@ function MapSettings({
       </div>
 
       <div className="flex flex-row gap-2 items-center justify-end w-full">
-        <label htmlFor="Powerup Num" className="block text-zinc-300">Apple Spawn Count</label>
+        <label htmlFor="Powerup Num" className="block text-zinc-300">Spawn Count</label>
         <input
           id="powerupNum"
           type="number"
-          value={appleNum}
-          onChange={handleAppleNumChange}
+          value={powerupNum}
+          onChange={handlePowerupNumChange}
           className="nav-input px-2 py-1 border rounded max-w-24"
           placeholder="Powerup Spawn #"
         />
       </div>
 
       <div className="flex flex-row gap-2 items-center justify-end w-full">
-        <label htmlFor="Hill ID" className="block text-zinc-300">Snake Start Size</label>
+        <label htmlFor="Hill ID" className="block text-zinc-300">Hill ID</label>
         <input
           id="hillID"
           type="number"
-          value={startSize}
-          onChange={handleStartSizeChange}
+          value={hillID}
+          onChange={handleHillIDChange}
           className="nav-input px-2 py-1 border rounded max-w-24"
           placeholder="Hill ID"
         />
