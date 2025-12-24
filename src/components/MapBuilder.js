@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import MapSettings from './MapSettings';
 import ShowSpawn from './ShowSpawn';
-import MapVis from './MapVis';
+import MapBuilderVis from './MapBuilderVis';
 import CellSelector from './CellSelector'
 import SymmetrySelector from './SymmetrySelector'
 import { Button } from '@/components/ui/button';
@@ -12,43 +12,38 @@ const GridValues = {
   EMPTY: 0,
   WALL: 1,
   APPLE: 2,
-  SNAKE_A_HEAD: 3,
-  SNAKE_A_BODY: 4,
-  SNAKE_B_HEAD: 5,
-  SNAKE_B_BODY: 6,
-  START_PORTAL: 7,
-  END_PORTAL: 8
+  PLAYER_1: 3,
+  PLAYER_2: 5,
+  HILL: 7,
 }
 
 export default function MapBuilder() {
   
-  const [showSnakeStart, setShowSnakeStart] = useState(true);
+  const [showSpawn, setShowSpawn] = useState(true);
   const [aSpawn, setASpawn] = useState([-1, -1]);
   const [bSpawn, setBSpawn] = useState([-1, -1]);
   const [mapHeight, setMapHeight] = useState(20);
   const [mapWidth, setMapWidth] = useState(20);
   const [walls, setWalls] = useState(null);  // Array to store wall positions, initially empty
-  const [portals, setPortals] = useState(null);  // Array to store wall positions, initially empty
   const [cellType, setCellType] = useState(GridValues.EMPTY);
-  const [appleRate, setAppleRate] = useState(50);
-  const [appleNum, setAppleNum] = useState(1);
+  const [powerupRate, setPowerupRate] = useState(50);
+  const [powerupNum, setPowerupNum] = useState(1);
   const [symmetry, setSymmetry] = useState("Vertical");
   const [canvasRerender, setCanvasRerender] = useState(false)
-  const [startSize, setStartSize] = useState(5)
   const [mapName, setMapName] = useState("")
-  const [startPortal, setStartPortal] = useState([-1, -1])
-  const [endPortal, setEndPortal] = useState([-1, -1])
+  const [hillGrid, setHillGrid] = useState(null) // Array to store wall positions, initially empty
+  const [hillID, setHillID] = useState(1)
+
   const { toast } = useToast();
 
   const min_map = 1;
   const max_map = 64;
-  const min_apple_num = 1;
-  const max_apple_num = 1000;
-  const min_apple_rate = 1;
-  const max_apple_rate = 200;
-  const min_start_size = 2;
-  const max_start_size = 1000;
-  const min_size = 2;
+  const min_powerup_num = 1;
+  const max_powerup_num = 1000;
+  const min_powerup_rate = 1;
+  const max_powerup_rate = 200;
+  const min_hill_id = 1;
+  const max_hill_id = 1000;
 
   const reflect = (x, y) => {
     if (symmetry == "Vertical") {
@@ -72,26 +67,18 @@ export default function MapBuilder() {
       case "Space":
         setCellType(GridValues.EMPTY);
         break;
-      //   case "Apple":
-      //       setCellType(GridValues.APPLE);
-      //       break;
       case "Wall":
         setCellType(GridValues.WALL);
         break;
-      case "Snake A":
-
-        setCellType(GridValues.SNAKE_A_HEAD);
+      case "Player 1":
+        setCellType(GridValues.PLAYER_1);
         break;
-      case "Snake B":
-
-        setCellType(GridValues.SNAKE_B_HEAD);
+      case "Player 2":
+        setCellType(GridValues.PLAYER_2);
         break;
-      case "Portal 1":
-        setCellType(GridValues.START_PORTAL)
+      case "Hill":
+        setCellType(GridValues.HILL)
         break;
-      case "Portal 2":
-        setCellType(GridValues.END_PORTAL)
-        break
     }
   };
 
@@ -101,11 +88,10 @@ export default function MapBuilder() {
     const f = Math.max(Math.min(max_map, value), min_map)
     setMapHeight(f);
     setWalls(new Array(f).fill().map(() => new Array(mapWidth).fill(false)));
-    setPortals(new Array(f).fill().map(() => new Array(mapWidth).fill(-1)));
+    setHillGrid(new Array(f).fill().map(() => new Array(mapWidth).fill(0)));
     setASpawn([-1, -1])
     setBSpawn([-1, -1])
-    setStartPortal([-1, -1])
-    setEndPortal([-1, -1])
+    setHillID(1)
   };
 
   const handleWidthChange = (event) => {
@@ -113,33 +99,31 @@ export default function MapBuilder() {
     const f = Math.max(Math.min(max_map, value), min_map)
     setMapWidth(f);
     setWalls(new Array(mapHeight).fill().map(() => new Array(f).fill(false)));
-    setPortals(new Array(mapHeight).fill().map(() => new Array(f).fill(-1)));
+    setHillGrid(new Array(mapHeight).fill().map(() => new Array(f).fill(0)));
     setASpawn([-1, -1])
     setBSpawn([-1, -1])
-    setStartPortal([-1, -1])
-    setEndPortal([-1, -1])
+    setHillID(1)
   };
 
-  const handleAppleRateChange = (event) => {
+  const handlePowerupRateChange = (event) => {
     const value = event.target.value ? parseInt(event.target.value, 10) : 0;
-    setAppleRate(Math.max(Math.min(max_apple_rate, value), min_apple_rate))
+    setPowerupRate(Math.max(Math.min(max_powerup_rate, value), min_powerup_rate))
   };
 
-  const handleAppleNumChange = (event) => {
+  const handlePowerupNumChange = (event) => {
     const value = event.target.value ? parseInt(event.target.value, 10) : 0;
-    setAppleNum(Math.max(Math.min(max_apple_num, value), min_apple_num))
+    setPowerupNum(Math.max(Math.min(max_powerup_num, value), min_powerup_num))
   };
 
-  const handleShowSnakeStart = (event) => {
-    setShowSnakeStart(event.target.checked);
+  const handleShowSpawn = (event) => {
+    setShowSpawn(event.target.checked);
     setCanvasRerender(!canvasRerender)
   };
 
-  const handleStartSizeChange = (event) => {
+  const handleHillIDChange = (event) => {
     const value = event.target.value ? parseInt(event.target.value, 10) : 0;
-    setStartSize(Math.max(Math.min(max_start_size, value), min_start_size))
+    setHillID(Math.max(Math.min(max_hill_id, value), min_hill_id))
   };
-
 
   const handleChangeMapName = (event) => {
     setMapName(event.target.value)
@@ -149,11 +133,10 @@ export default function MapBuilder() {
     const value = event.target.value;
     setSymmetry(value);
     setWalls(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(false)));
-    setPortals(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(-1)));
+    setHillGrid(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(0)));
     setASpawn([-1, -1])
     setBSpawn([-1, -1])
-    setStartPortal([-1, -1])
-    setEndPortal([-1, -1])
+    setHillID(1)
 
   };
 
@@ -193,9 +176,9 @@ export default function MapBuilder() {
     for (let i = 0; i < mapHeight; i++) {
       for (let j = 0; j < mapWidth; j++) {
         let portalString = []
-        if (portals[i][j] >= 0) {
-          let othery = Math.floor(portals[i][j] / mapWidth)
-          let otherx = portals[i][j] % mapWidth
+        if (hills[i][j] >= 0) {
+          let othery = Math.floor(hills[i][j] / mapWidth)
+          let otherx = hills[i][j] % mapWidth
 
           portalString.push(j)
           portalString.push(i)
@@ -214,7 +197,7 @@ export default function MapBuilder() {
     parts.push(startSize.toString());
     parts.push(min_size.toString());
     parts.push(portalList.join("_"));
-    parts.push(appleRate.toString() + "," + appleNum.toString() + "," + symmetry);
+    parts.push(powerupRate.toString() + "," + powerupNum.toString() + "," + symmetry);
 
     let wallarr = []
 
@@ -269,29 +252,29 @@ export default function MapBuilder() {
         walls[y][x] = false;
         const reflection = reflect(x, y);
         walls[reflection[1]][reflection[0]] = false;
-      } else if (portals != null && portals[y][x] >= 0) {
-        const partnerPortal = portals[y][x]
+      } else if (hills != null && hills[y][x] >= 0) {
+        const partnerPortal = hills[y][x]
 
         const partnerPortalX = partnerPortal % mapWidth
         const partnerPortalY = Math.floor(partnerPortal / mapWidth)
 
-        portals[y][x] = -1;
-        portals[partnerPortalY][partnerPortalX] = -1;
+        hills[y][x] = -1;
+        hills[partnerPortalY][partnerPortalX] = -1;
       }
-    } else if (cellType == GridValues.SNAKE_A_HEAD) {
+    } else if (cellType == GridValues.PLAYER_1) {
       const reflection = reflect(x, y);
       if (reflection[0] != x || reflection[1] != y) {
         if (walls != null && walls[y][x]) {
           walls[y][x] = false;
           walls[reflection[1]][reflection[0]] = false;
-        } else if (portals != null && portals[y][x] >= 0) {
-          const partnerPortal = portals[y][x]
+        } else if (hills != null && hills[y][x] >= 0) {
+          const partnerPortal = hills[y][x]
 
           const partnerPortalX = partnerPortal % mapWidth
           const partnerPortalY = Math.floor(partnerPortal / mapWidth)
 
-          portals[y][x] = -1;
-          portals[partnerPortalY][partnerPortalX] = -1;
+          hills[y][x] = -1;
+          hills[partnerPortalY][partnerPortalX] = -1;
         }
         if (reflection[0] != x || reflection[1] != y) {
           setASpawn([x, y])
@@ -300,20 +283,20 @@ export default function MapBuilder() {
       }
 
 
-    } else if (cellType == GridValues.SNAKE_B_HEAD) {
+    } else if (cellType == GridValues.PLAYER_2) {
       const reflection = reflect(x, y);
       if (reflection[0] != x || reflection[1] != y) {
         if (walls != null && walls[y][x]) {
           walls[y][x] = false;
           walls[reflection[1]][reflection[0]] = false;
-        } else if (portals != null && portals[y][x] >= 0) {
-          const partnerPortal = portals[y][x]
+        } else if (hills != null && hills[y][x] >= 0) {
+          const partnerPortal = hills[y][x]
 
           const partnerPortalX = partnerPortal % mapWidth
           const partnerPortalY = Math.floor(partnerPortal / mapWidth)
 
-          portals[y][x] = -1;
-          portals[partnerPortalY][partnerPortalX] = -1;
+          hills[y][x] = -1;
+          hills[partnerPortalY][partnerPortalX] = -1;
         }
         if (reflection[0] != x || reflection[1] != y) {
           setBSpawn([x, y])
@@ -329,14 +312,14 @@ export default function MapBuilder() {
       } else if (x == bSpawn[0] && y == bSpawn[1]) {
         setASpawn([-1, -1])
         setBSpawn([-1, -1])
-      } else if (portals != null && portals[y][x] >= 0) {
-        const partnerPortal = portals[y][x]
+      } else if (hills != null && hills[y][x] >= 0) {
+        const partnerPortal = hills[y][x]
 
         const partnerPortalX = partnerPortal % mapWidth
         const partnerPortalY = Math.floor(partnerPortal / mapWidth)
 
-        portals[y][x] = -1;
-        portals[partnerPortalY][partnerPortalX] = -1;
+        hills[y][x] = -1;
+        hills[partnerPortalY][partnerPortalX] = -1;
       }
       walls[y][x] = true;
       walls[reflection[1]][reflection[0]] = true;
@@ -351,21 +334,21 @@ export default function MapBuilder() {
       } else if (walls != null && walls[y][x]) {
         walls[y][x] = 0;
         walls[reflection[1]][reflection[0]] = 0;
-      } else if (portals != null && portals[y][x] >= 0) {
-        const partnerPortal = portals[y][x]
+      } else if (hills != null && hills[y][x] >= 0) {
+        const partnerPortal = hills[y][x]
 
         const partnerPortalX = partnerPortal % mapWidth
         const partnerPortalY = Math.floor(partnerPortal / mapWidth)
 
-        portals[y][x] = -1;
-        portals[partnerPortalY][partnerPortalX] = -1;
+        hills[y][x] = -1;
+        hills[partnerPortalY][partnerPortalX] = -1;
 
 
       }
 
       if (endPortal[0] != -1) {
-        portals[y][x] = endPortal[1] * mapWidth + endPortal[0]
-        portals[endPortal[1]][endPortal[0]] = y * mapWidth + x
+        hills[y][x] = endPortal[1] * mapWidth + endPortal[0]
+        hills[endPortal[1]][endPortal[0]] = y * mapWidth + x
         setEndPortal([-1, -1])
 
       } else {
@@ -382,18 +365,18 @@ export default function MapBuilder() {
       } else if (walls != null && walls[y][x] > 0) {
         walls[y][x] = 0;
         walls[reflection[1]][reflection[0]] = 0;
-      } else if (portals != null && portals[y][x] >= 0) {
-        const partnerPortal = portals[y][x]
+      } else if (hills != null && hills[y][x] >= 0) {
+        const partnerPortal = hills[y][x]
 
         const partnerPortalX = partnerPortal % mapWidth
         const partnerPortalY = Math.floor(partnerPortal / mapWidth)
 
-        portals[y][x] = -1;
-        portals[partnerPortalY][partnerPortalX] = -1;
+        hills[y][x] = -1;
+        hills[partnerPortalY][partnerPortalX] = -1;
       }
       if (startPortal[0] != -1) {
-        portals[y][x] = startPortal[1] * mapWidth + startPortal[0]
-        portals[startPortal[1]][startPortal[0]] = y * mapWidth + x
+        hills[y][x] = startPortal[1] * mapWidth + startPortal[0]
+        hills[startPortal[1]][startPortal[0]] = y * mapWidth + x
         setStartPortal([-1, -1])
 
       } else {
@@ -408,8 +391,8 @@ export default function MapBuilder() {
     if (walls == null) {
       setWalls(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(false)));
     }
-    if (portals == null) {
-      setPortals(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(-1)));
+    if (hills == null) {
+      setHills(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(-1)));
     }
   }, []);
 
@@ -467,7 +450,7 @@ export default function MapBuilder() {
             <p htmlFor="appleRate" className="block text-zinc-300">Symmetry</p>
             <SymmetrySelector handleSymmetryChange={handleSymmetryChange} />
           </div>
-          <ShowSpawn showSnakeStart={showSnakeStart} handleShowSnakeStart={handleShowSnakeStart} />
+          <ShowSpawn showSnakeStart={showSpawn} handleShowSnakeStart={handleShowSnakeStart} />
         </div>
         <div className="flex flex-col items-center justify-start gap-3 pb-5 border-b border-zinc-700">
           <MapSettings
@@ -475,12 +458,12 @@ export default function MapBuilder() {
             handleHeightChange={handleHeightChange}
             mapWidth={mapWidth}
             handleWidthChange={handleWidthChange}
-            appleRate={appleRate}
-            handleAppleRateChange={handleAppleRateChange}
-            appleNum={appleNum}
-            handleAppleNumChange={handleAppleNumChange}
-            startSize={startSize}
-            handleStartSizeChange={handleStartSizeChange}
+            appleRate={powerupRate}
+            handlePowerupRateChange={handlePowerupRateChange}
+            appleNum={powerupNum}
+            handlePowerupNumChange={handlePowerupNumChange}
+            hillID={hillID}
+            handleHillIDChange={handleHillIDChange}
           />
         </div>
         <div className="flex flex-col items-center justify-start gap-2 w-full">
@@ -528,7 +511,7 @@ export default function MapBuilder() {
 
         </div>
         <MapVis
-          showSnakeStart={showSnakeStart}
+          showSnakeStart={showSpawn}
           aSpawn={aSpawn}
           bSpawn={bSpawn}
           startPortal={startPortal}
@@ -536,7 +519,7 @@ export default function MapBuilder() {
           mapHeight={mapHeight}
           mapWidth={mapWidth}
           walls={walls}
-          portals={portals}
+          portals={hills}
           cellType={cellType}
           setTile={setTile}
           rerender={canvasRerender}

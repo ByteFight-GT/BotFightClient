@@ -2,14 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Action } from '../replay/game_engine';
 
 
-export default function MapVis({
-  showSnakeStart, 
+export default function MapBuilderVis({
+  showSpawn, 
   aSpawn,
   bSpawn,
-  startPortal,
-  endPortal,
   mapHeight, mapWidth, 
-  walls, portals,
+  walls, hillMap,
   cellType,
   setTile,
   rerender
@@ -92,7 +90,7 @@ export default function MapVis({
         
     }
 
-    const drawPortal = (x, y) => {
+    const drawHill = (x, y) => {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.beginPath();
       ctx.arc(
@@ -109,7 +107,7 @@ export default function MapVis({
 
      }
 
-    const drawSnakeHead = (x, y, color, direction) => {
+    const drawPlayer = (x, y, color, direction) => {
         ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(
@@ -177,18 +175,15 @@ export default function MapVis({
           if(walls != null && walls[y][x]){
             drawWall(x, y);
           } 
-          else if(portals != null && portals[y][x] >= 0){
-            drawPortal(x, y)
+          else if(hillMap != null && hillMap[y][x] != 0){
+            drawHill(x, y)
 
           }
-          else if((x == startPortal[0] && y == startPortal[1])||(x == endPortal[0] && y == endPortal[1])){
-            drawPortal(x, y)
+          else if(showSpawn && x == aSpawn[0] && y == aSpawn[1]){
+            drawPlayer(x, y, 'green', Action.NORTH);
           }
-          else if(showSnakeStart && x == aSpawn[0] && y == aSpawn[1]){
-            drawSnakeHead(x, y, 'green', Action.NORTH);
-          }
-          else if(showSnakeStart && x == bSpawn[0] && y == bSpawn[1]){
-            drawSnakeHead(x, y, 'blue', Action.NORTH);
+          else if(showSpawn && x == bSpawn[0] && y == bSpawn[1]){
+            drawPlayer(x, y, 'blue', Action.NORTH);
           }
       }
 
@@ -212,12 +207,10 @@ export default function MapVis({
   }, [
     aSpawn, 
     bSpawn, 
-    startPortal,
-    endPortal,
     mapHeight, 
     mapWidth, 
     walls, 
-    portals,
+    hillMap,
     mouseCellX,
     mouseCellY,
     rerender
