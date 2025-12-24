@@ -26,6 +26,24 @@ contextBridge.exposeInMainWorld('electron', {
     sendTCPInterrupt: () => ipcRenderer.invoke('tcp-send-interrupt'),
     disconnectTCP: () => ipcRenderer.invoke('tcp-disconnect'),
 
+    onTcpData: (callback) => {
+        const handler = (_, data) => callback(data);
+        ipcRenderer.on('stream-tcp-data', handler);
+        return () => ipcRenderer.removeListener('stream-tcp-data', handler);
+    },
+
+    onTcpJson: (callback) => {
+        const handler = (_, data) => callback(data);
+        ipcRenderer.on('stream-tcp-message', handler);
+        return () => ipcRenderer.removeListener('stream-tcp-message', handler);
+    },
+
+    onTcpStatus: (callback) => {
+        const handler = (_, status) => callback(status);
+        ipcRenderer.on('stream-tcp-status', handler);
+        return () => ipcRenderer.removeListener('stream-tcp-status', handler);
+    },
+
     onStreamOutput: (callback) => {
         const handler = (_, chunk) => callback(chunk);
         ipcRenderer.on('stream-output', handler);
@@ -48,21 +66,5 @@ contextBridge.exposeInMainWorld('electron', {
         const handler = (_, fullError) => callback(fullError);
         ipcRenderer.on('stream-error-full', handler);
         return () => ipcRenderer.removeListener('stream-error-full', handler);
-    },
-
-    onTcpData: (callback) => {
-        const handler = (_, data) => callback(data);
-        ipcRenderer.on('stream-tcp-data', handler);
-        return () => ipcRenderer.removeListener('stream-tcp-data', handler);
-    },
-    onTcpJson: (callback) => {
-        const handler = (_, data) => callback(data);
-        ipcRenderer.on('stream-tcp-message', handler);
-        return () => ipcRenderer.removeListener('stream-tcp-message', handler);
-    },
-    onTcpStatus: (callback) => {
-        const handler = (_, status) => callback(status);
-        ipcRenderer.on('stream-tcp-status', handler);
-        return () => ipcRenderer.removeListener('stream-tcp-status', handler);
     },
 });

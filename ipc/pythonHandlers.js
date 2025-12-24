@@ -197,7 +197,7 @@ function setupPythonScriptHandlers(store, enginePath) {
                 if (code !== 0) {
                     reject(new Error(`Python script error: ${scriptError}`));
                 } else {
-                    resolve(tcpResult);
+                    resolve(scriptOutput);
                 }
             });
 
@@ -219,7 +219,7 @@ function setupPythonScriptHandlers(store, enginePath) {
                             console.log('TCP data received');
                         },
                         (jsonData) => { // onMessage
-                            event.sender.send('stream-tcp-message', jsonData);
+                            event.sender.send('stream-tcp-json', jsonData);
                             console.log('TCP data parsed');
                             tcpResult = jsonData;
                         }, 
