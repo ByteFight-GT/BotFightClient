@@ -1,11 +1,13 @@
 "use client";
 
-import TabSwitcher from "@/components/TabSwitcher";
+import React from 'react';
 
-export default function Home() {
-  return (
-    <main>
-      <TabSwitcher/>
-    </main>
-  );
-}
+const HomePage = () => {
+	return (
+		<div>
+			nothing here lol
+		</div>
+	);
+};
+
+export default HomePage;
