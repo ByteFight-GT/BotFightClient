@@ -1,10 +1,10 @@
 {
-  "name": "bytefight-client",
+  "name": "bytefight-client-2026",
   "version": "1.1.0",
   "private": true,
   "main": "main.js",
   "homepage": "./",
-  "description": "Bytefight Desktop Client",
+  "description": "Bytefight 2026 Desktop Client",
   "author": "Henry Liao <hliao62@gatech.edu>",
   "scripts": {
     "dev": "next dev",
@@ -70,7 +70,8 @@
       },
       "main.js",
       "preload.js",
-      "package.json"
+      "package.json",
+      "ipc/**"
     ],
     "extraResources": [
       {
