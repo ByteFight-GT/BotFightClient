@@ -171,33 +171,7 @@ export default function MapBuilder() {
 
     ]
 
-    let portalList = []
-
-    for (let i = 0; i < mapHeight; i++) {
-      for (let j = 0; j < mapWidth; j++) {
-        let portalString = []
-        if (hills[i][j] >= 0) {
-          let othery = Math.floor(hills[i][j] / mapWidth)
-          let otherx = hills[i][j] % mapWidth
-
-          portalString.push(j)
-          portalString.push(i)
-          portalString.push(otherx)
-          portalString.push(othery)
-
-          portalList.push(portalString.join(","))
-
-        }
-      }
-    }
-
-    parts.push(mapWidth.toString() + "," + mapHeight.toString());
-    parts.push(aSpawn[0].toString() + "," + aSpawn[1].toString());
-    parts.push(bSpawn[0].toString() + "," + bSpawn[1].toString());
-    parts.push(startSize.toString());
-    parts.push(min_size.toString());
-    parts.push(portalList.join("_"));
-    parts.push(powerupRate.toString() + "," + powerupNum.toString() + "," + symmetry);
+    
 
     let wallarr = []
 
@@ -212,9 +186,40 @@ export default function MapBuilder() {
     }
     let wallstring = wallarr.join("");
 
-    parts.push(wallstring);
-    parts.push("0");
 
+    let hillDict = {}
+    let hillids = []
+    let fullHills = []
+
+    for (let i = 0; i < mapHeight; i++) {
+      for (let j = 0; j < mapWidth; j++) {
+        if (hillGrid[i][j] > 0) {
+          const id = hillGrid[i][j]
+          if(!(id in hillDict)){
+            hillDict[id] = []
+          }
+          hillDict[id].push(i+"")
+          hillDict[id].push(j+"")
+        }
+      }
+    }
+
+    for(const id in hillDict){
+      hillids.push(id+"")
+      fullHills.push(hillDict[id].join(","))
+    }
+    let hillIDstring = hillids.join("")
+    let hillsString = fullHills.join("_")
+    
+
+    parts.push(mapHeight.toString() + "," + mapWidth.toString());
+    parts.push(aSpawn[0].toString() + "," + aSpawn[1].toString());
+    parts.push(bSpawn[0].toString() + "," + bSpawn[1].toString());
+    parts.push(wallstring);
+    parts.push(hillIDstring);
+    parts.push(hillsString);
+    parts.push("0");
+    parts.push(powerupRate.toString() + "," + powerupNum.toString() + "," + symmetry);
     const generated_string = parts.join("#")
 
     return generated_string;
@@ -234,155 +239,74 @@ export default function MapBuilder() {
   }
 
 
-  const setTile = (x, y) => {
-    if (cellType != GridValues.START_PORTAL && cellType != GridValues.END_PORTAL) {
-      setStartPortal([-1, -1])
-      setEndPortal([-1, -1])
-    }
+  const setTile = (r, c) => {
     if (cellType == GridValues.EMPTY) {
-      if (x == aSpawn[0] && y == aSpawn[1]) {
+      if (r == aSpawn[0] && c == aSpawn[1]) {
         setASpawn([-1, -1])
         setBSpawn([-1, -1])
 
-      } else if (x == bSpawn[0] && y == bSpawn[1]) {
+      } else if (r == bSpawn[0] && c == bSpawn[1]) {
         setASpawn([-1, -1])
         setBSpawn([-1, -1])
-      } else if (walls != null && walls[y][x]) {
+      } else if (walls != null && walls[r][c]) {
 
-        walls[y][x] = false;
-        const reflection = reflect(x, y);
-        walls[reflection[1]][reflection[0]] = false;
-      } else if (hills != null && hills[y][x] >= 0) {
-        const partnerPortal = hills[y][x]
-
-        const partnerPortalX = partnerPortal % mapWidth
-        const partnerPortalY = Math.floor(partnerPortal / mapWidth)
-
-        hills[y][x] = -1;
-        hills[partnerPortalY][partnerPortalX] = -1;
+        walls[r][c] = false;
+        const reflection = reflect(r, c);
+        walls[reflection[0]][reflection[1]] = false;
+      } else if (hillGrid != null) {
+        hillGrid[r][c] = 0;
       }
     } else if (cellType == GridValues.PLAYER_1) {
-      const reflection = reflect(x, y);
-      if (reflection[0] != x || reflection[1] != y) {
-        if (walls != null && walls[y][x]) {
-          walls[y][x] = false;
-          walls[reflection[1]][reflection[0]] = false;
-        } else if (hills != null && hills[y][x] >= 0) {
-          const partnerPortal = hills[y][x]
-
-          const partnerPortalX = partnerPortal % mapWidth
-          const partnerPortalY = Math.floor(partnerPortal / mapWidth)
-
-          hills[y][x] = -1;
-          hills[partnerPortalY][partnerPortalX] = -1;
-        }
-        if (reflection[0] != x || reflection[1] != y) {
-          setASpawn([x, y])
+      const reflection = reflect(r, c);
+      if (reflection[0] != r || reflection[1] != c) {
+        if (walls != null && walls[r][c]) {
+          walls[r][c] = false;
+          walls[reflection[0]][reflection[1]] = false;
+        } 
+        if (reflection[0] != r || reflection[1] != c) {
+          setASpawn([r, c])
           setBSpawn(reflection)
+
+          console.log(aSpawn)
         }
       }
 
 
     } else if (cellType == GridValues.PLAYER_2) {
-      const reflection = reflect(x, y);
-      if (reflection[0] != x || reflection[1] != y) {
-        if (walls != null && walls[y][x]) {
-          walls[y][x] = false;
-          walls[reflection[1]][reflection[0]] = false;
-        } else if (hills != null && hills[y][x] >= 0) {
-          const partnerPortal = hills[y][x]
-
-          const partnerPortalX = partnerPortal % mapWidth
-          const partnerPortalY = Math.floor(partnerPortal / mapWidth)
-
-          hills[y][x] = -1;
-          hills[partnerPortalY][partnerPortalX] = -1;
-        }
-        if (reflection[0] != x || reflection[1] != y) {
-          setBSpawn([x, y])
+      const reflection = reflect(r, c);
+      if (reflection[0] != r || reflection[1] != c) {
+        if (walls != null && walls[c][r]) {
+          walls[r][c] = false;
+          walls[reflection[0]][reflection[1]] = false;
+        } 
+        if (reflection[0] != r || reflection[1] != c) {
+          setBSpawn([r, c])
           setASpawn(reflection)
         }
       }
 
     } else if (cellType == GridValues.WALL) {
-      const reflection = reflect(x, y);
-      if (x == aSpawn[0] && y == aSpawn[1]) {
+      const reflection = reflect(r, c);
+      if (r == aSpawn[0] && c == aSpawn[1]) {
         setASpawn([-1, -1])
         setBSpawn([-1, -1])
-      } else if (x == bSpawn[0] && y == bSpawn[1]) {
+      } else if (r == bSpawn[0] && c == bSpawn[1]) {
         setASpawn([-1, -1])
         setBSpawn([-1, -1])
-      } else if (hills != null && hills[y][x] >= 0) {
-        const partnerPortal = hills[y][x]
-
-        const partnerPortalX = partnerPortal % mapWidth
-        const partnerPortalY = Math.floor(partnerPortal / mapWidth)
-
-        hills[y][x] = -1;
-        hills[partnerPortalY][partnerPortalX] = -1;
+      } else if (hillGrid != null) {
+        hillGrid[r][c] = 0
       }
-      walls[y][x] = true;
-      walls[reflection[1]][reflection[0]] = true;
-    } else if (cellType == GridValues.START_PORTAL) {
-      const reflection = reflect(x, y);
-      if (x == aSpawn[0] && y == aSpawn[1]) {
-        setASpawn([-1, -1])
-        setBSpawn([-1, -1])
-      } else if (x == bSpawn[0] && y == bSpawn[1]) {
-        setASpawn([-1, -1])
-        setBSpawn([-1, -1])
-      } else if (walls != null && walls[y][x]) {
-        walls[y][x] = 0;
-        walls[reflection[1]][reflection[0]] = 0;
-      } else if (hills != null && hills[y][x] >= 0) {
-        const partnerPortal = hills[y][x]
+      walls[r][c] = true;
+      walls[reflection[0]][reflection[1]] = true;
+    } else if (cellType == GridValues.HILL) {
+      const reflection = reflect(r, c);
+      if (walls != null && walls[c][r]) {
+        walls[r][c] = 0;
+        walls[reflection[0]][reflection[1]] = 0;
+      } 
 
-        const partnerPortalX = partnerPortal % mapWidth
-        const partnerPortalY = Math.floor(partnerPortal / mapWidth)
-
-        hills[y][x] = -1;
-        hills[partnerPortalY][partnerPortalX] = -1;
-
-
-      }
-
-      if (endPortal[0] != -1) {
-        hills[y][x] = endPortal[1] * mapWidth + endPortal[0]
-        hills[endPortal[1]][endPortal[0]] = y * mapWidth + x
-        setEndPortal([-1, -1])
-
-      } else {
-        setStartPortal([x, y])
-      }
-    } else if (cellType == GridValues.END_PORTAL) {
-      const reflection = reflect(x, y);
-      if (x == aSpawn[0] && y == aSpawn[1]) {
-        setASpawn([-1, -1])
-        setBSpawn([-1, -1])
-      } else if (x == bSpawn[0] && y == bSpawn[1]) {
-        setASpawn([-1, -1])
-        setBSpawn([-1, -1])
-      } else if (walls != null && walls[y][x] > 0) {
-        walls[y][x] = 0;
-        walls[reflection[1]][reflection[0]] = 0;
-      } else if (hills != null && hills[y][x] >= 0) {
-        const partnerPortal = hills[y][x]
-
-        const partnerPortalX = partnerPortal % mapWidth
-        const partnerPortalY = Math.floor(partnerPortal / mapWidth)
-
-        hills[y][x] = -1;
-        hills[partnerPortalY][partnerPortalX] = -1;
-      }
-      if (startPortal[0] != -1) {
-        hills[y][x] = startPortal[1] * mapWidth + startPortal[0]
-        hills[startPortal[1]][startPortal[0]] = y * mapWidth + x
-        setStartPortal([-1, -1])
-
-      } else {
-        setEndPortal([x, y])
-      }
-    }
+      hillGrid[r][c] = hillID
+    } 
     setCanvasRerender(!canvasRerender)
   }
 
@@ -392,7 +316,7 @@ export default function MapBuilder() {
       setWalls(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(false)));
     }
     if (hillGrid == null) {
-      setHillGrid(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(-1)));
+      setHillGrid(new Array(mapHeight).fill().map(() => new Array(mapWidth).fill(0)));
     }
   }, []);
 
@@ -458,9 +382,9 @@ export default function MapBuilder() {
             handleHeightChange={handleHeightChange}
             mapWidth={mapWidth}
             handleWidthChange={handleWidthChange}
-            appleRate={powerupRate}
+            powerupRate={powerupRate}
             handlePowerupRateChange={handlePowerupRateChange}
-            appleNum={powerupNum}
+            powerupNum={powerupNum}
             handlePowerupNumChange={handlePowerupNumChange}
             hillID={hillID}
             handleHillIDChange={handleHillIDChange}
@@ -517,7 +441,7 @@ export default function MapBuilder() {
           mapHeight={mapHeight}
           mapWidth={mapWidth}
           walls={walls}
-          hillMap={hillGrid}
+          hillGrid={hillGrid}
           cellType={cellType}
           setTile={setTile}
           rerender={canvasRerender}
