@@ -24,6 +24,7 @@ function MatchPlayer() {
   const [engineOutput, setEngineOutput] = useState(null);
   const [map, setMap] = useState(null);
   const [matchInfo, setMatchInfo] = useState(null)
+  const [isMatchRunning, setIsMatchRunning] = useState(false);
 
   const botCount = (bot1File && bot2File ? 2 : bot1File || bot2File ? 1 : 0);
   const canStart = bot1File && bot2File && map;
@@ -68,10 +69,19 @@ function MatchPlayer() {
   };
 
   const handleBattleStart = () => {
+  if (isMatchRunning) {
+    // Stop the match
+    window.electron.sendTCPInterrupt();
+    setIsMatchRunning(false);
+    setEngineOutput("Match terminated by user");
+  } else {
+    // Start the match
     setBot1File(bot1File);
     setBot2File(bot2File);
     setShouldPlayMatch(true);
+    setIsMatchRunning(true);
   }
+}
 
   const handleStdOutData = (chunk) => {
     console.log("stdout");
@@ -161,7 +171,10 @@ function MatchPlayer() {
 
         try {
           setEngineOutput(await window.electron.runPythonScript(scriptArgs));
+          setIsMatchRunning(false);
+
         } finally {
+          setIsMatchRunning(false);
           cleanupTcpData();
           cleanupTcpJson();
           cleanupTcpStatus();
@@ -218,15 +231,17 @@ function MatchPlayer() {
             </div>
             <MapSelector onSelectMap={handleSetMap} />
             <Button
-              className={`px-4 py-2 rounded text-sm text-white
-            ${(bot1File && bot2File && map != null)
+            className={`px-4 py-2 rounded text-sm text-white
+              ${isMatchRunning
+                ? 'bg-red-500 hover:bg-red-600'
+                : (bot1File && bot2File && map != null)
                   ? 'bg-green-500 hover:bg-green-600'
                   : 'bg-zinc-600 cursor-not-allowed'}`}
-              disabled={!canStart}
-              onClick={handleBattleStart}
-            >
-              Start Battle
-            </Button>
+            disabled={!canStart && !isMatchRunning}
+            onClick={handleBattleStart}
+          >
+            {isMatchRunning ? 'Stop Match' : 'Start Battle'}
+          </Button>
           </div>
           <Game
             currentMatchStateIndex={currentMatchStateIndex}
