@@ -72,8 +72,6 @@ function MatchPlayer() {
   if (isMatchRunning) {
     // Stop the match
     window.electron.sendTCPInterrupt();
-    setIsMatchRunning(false);
-    setEngineOutput("Match terminated by user");
   } else {
     // Start the match
     setBot1File(bot1File);
