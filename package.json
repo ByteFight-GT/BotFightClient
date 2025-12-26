@@ -57,8 +57,8 @@
     "typescript": "^5.8.2"
   },
   "build": {
-    "appId": "com.bytefight.bytefightclient2025",
-    "productName": "Bytefight Client 2025",
+    "appId": "com.bytefight.bytefightclient2026",
+    "productName": "Bytefight Client 2026",
     "forceCodeSigning": false,
     "files": [
       {
