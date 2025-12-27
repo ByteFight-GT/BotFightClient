@@ -45,7 +45,6 @@ function closePython(){
     }
 }
 
-
 class TcpClientManager {
     constructor() {
         this.client = null;
@@ -54,12 +53,36 @@ class TcpClientManager {
         this.messageBuffer = ''; // For handling partial messages
     }
 
-    connect(host, port, onData, onMessage, onComplete, onError, onClose) {
+    async connect(host, port, onData, onMessage, onComplete, onError, onClose, maxRetries = 20, initialDelay = 100) {
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                await this._attemptConnect(host, port, onData, onMessage, onComplete, onError, onClose);
+                console.log(`Successfully connected to TCP server on port ${port}`);
+                return; // Success!
+            } catch (error) {
+                if (attempt === maxRetries - 1) {
+                    throw new Error(`Failed to connect after ${maxRetries} attempts: ${error.message}`);
+                }
+                
+                const delay = Math.min(initialDelay * Math.pow(1.5, attempt), 2000);
+                console.log(`Connection attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+
+    _attemptConnect(host, port, onData, onMessage, onComplete, onError, onClose) {
         return new Promise((resolve, reject) => {
-            // crate tcp client
+            // Create tcp client
             this.client = new net.Socket();
 
-            //start registering handlers
+            // Set connection timeout
+            const connectionTimeout = setTimeout(() => {
+                this.client.destroy();
+                reject(new Error('Connection timeout'));
+            }, 2000);
+
+            // Start registering handlers
             this.client.on('data', (data) => {
                 const chunk = data.toString();
                 this.dataBuffer += chunk;
@@ -79,7 +102,7 @@ class TcpClientManager {
                             onMessage(jsonMessage);
                         } catch (e) {
                             console.warn('Received non-JSON message:', message);
-                            onMessage({ type:"unparsed" , raw:message });
+                            onMessage({ type: "unparsed", raw: message });
                         }
                     }
                 }
@@ -90,45 +113,46 @@ class TcpClientManager {
                 this.connected = false;
 
                 if (onComplete) {
-                    onComplete()
-                };
+                    onComplete();
+                }
             });
 
             this.client.on('close', () => {
                 console.log('TCP connection closed');
                 this.connected = false;
                 if (onClose) {
-                    onClose()
-                };
+                    onClose();
+                }
             });
 
             this.client.on('error', (err) => {
+                clearTimeout(connectionTimeout);
                 console.error('TCP client error:', err);
-                if (onError) {
+                
+                // Only call onError for errors after successful connection
+                if (this.connected && onError) {
                     onError(err);
                 }
+                
                 this.connected = false;
-
                 reject(err);
             });
 
             // Actually connect
             this.client.connect(port, host, () => {
+                clearTimeout(connectionTimeout);
                 console.log(`TCP client connected to ${host}:${port}`);
                 this.connected = true;
                 resolve();
             });
-
-
         });
     }
 
-    disconnect(){
+    disconnect() {
         if (this.client && this.connected) {
-            this.client.end()
+            this.client.end();
         }
-        this.connected = false
-
+        this.connected = false;
     }
 
     sendInterrupt() {
@@ -140,6 +164,8 @@ class TcpClientManager {
         }
     }
 }
+
+
 
 function setupPythonScriptHandlers(store, enginePath) {
 
@@ -163,7 +189,11 @@ function setupPythonScriptHandlers(store, enginePath) {
             // Create new TCP client manager
             tcpClientManager = new TcpClientManager();
 
-            pythonProcess = spawn(`"${pythonpath} ${gameScript}"`, [...scriptArgs], {
+
+            console.log("running")
+            console.log(`"${pythonpath} ${gameScript} ${[...scriptArgs]}"`)
+
+            pythonProcess = spawn(`"${pythonpath}" "${gameScript}"`, [...scriptArgs], {
                 cwd: enginePath,
                 shell: true
             });
@@ -197,7 +227,7 @@ function setupPythonScriptHandlers(store, enginePath) {
                 if (code !== 0) {
                     reject(new Error(`Python script error: ${scriptError}`));
                 } else {
-                    resolve(tcpResult);
+                    resolve(scriptOutput);
                 }
             });
 
@@ -219,7 +249,7 @@ function setupPythonScriptHandlers(store, enginePath) {
                             console.log('TCP data received');
                         },
                         (jsonData) => { // onMessage
-                            event.sender.send('stream-tcp-message', jsonData);
+                            event.sender.send('stream-tcp-json', jsonData);
                             console.log('TCP data parsed');
                             tcpResult = jsonData;
                         }, 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 export default function CellSelector({handleCellChange}) {
-  const [ids, setIds] = useState(["Space", "Wall", "Snake A", "Snake B", "Portal 1", "Portal 2"]);
+  const [ids, setIds] = useState(["Space", "Wall", "Player 1", "Player 2", "Hill"]);
 
     
   return (

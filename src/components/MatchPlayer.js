@@ -24,6 +24,7 @@ function MatchPlayer() {
   const [engineOutput, setEngineOutput] = useState(null);
   const [map, setMap] = useState(null);
   const [matchInfo, setMatchInfo] = useState(null)
+  const [isMatchRunning, setIsMatchRunning] = useState(false);
 
   const botCount = (bot1File && bot2File ? 2 : bot1File || bot2File ? 1 : 0);
   const canStart = bot1File && bot2File && map;
@@ -46,11 +47,12 @@ function MatchPlayer() {
 
   const handleSetMap = (value) => {
     setMap(value)
+    console.log(value)
 
-    let match_states = new Array(1).fill(null);
-    match_states[0] = getMap(value)
-    setMatchStates(match_states);
-    setCurrentMatchStateIndex(0);
+    // let match_states = new Array(1).fill(null);
+    // match_states[0] = getMap(value)
+    // setMatchStates(match_states);
+    // setCurrentMatchStateIndex(0);
     setMatchInfo(null)
 
   }
@@ -67,18 +69,53 @@ function MatchPlayer() {
   };
 
   const handleBattleStart = () => {
+  if (isMatchRunning) {
+    // Stop the match
+    window.electron.sendTCPInterrupt();
+  } else {
+    // Start the match
     setBot1File(bot1File);
     setBot2File(bot2File);
     setShouldPlayMatch(true);
+    setIsMatchRunning(true);
   }
-  
-  const tcpJSONCallback = () => {
+}
 
+  const handleStdOutData = (chunk) => {
+    console.log("stdout");
+    console.log(chunk);
   }
 
-  const tcpStatusCallback = () => {
-    
+  const handleStdOutDataFull = (fullOutput) => {
+    console.log("stdoutfull");
+    console.log(fullOutput);
   }
+
+  const handleErrOutData = (chunk) => {
+    console.log("errout");
+    console.log(chunk);
+  }
+
+  const handleErrOutDataFull = (fullOutput) => {
+    console.log("erroutfull");
+    console.log(fullOutput);
+  }
+
+  const handleTcpData = (data) => {
+    console.log("tcpdata");
+    console.log(data);
+  }
+
+  const handleTcpMessage = (json) => {
+    console.log("tcpmessage");
+    console.log(json);
+  }
+
+  const handleTcpStatus = (status) => {
+    console.log("tcpstatus");
+    console.log(status);
+  }
+
 
   useEffect(() => {
     let interval;
@@ -119,14 +156,37 @@ function MatchPlayer() {
           '--output_dir', `"${resultFilePath}"`
         ];
 
-        
-        const result = await window.electron.runPythonScript(scriptArgs);
+
+        // register handlers
+        // Register handlers and get cleanup functions
+        const cleanupTcpData = window.electron.onTcpData(handleTcpData);
+        const cleanupTcpJson = window.electron.onTcpJson(handleTcpMessage);
+        const cleanupTcpStatus = window.electron.onTcpStatus(handleTcpStatus);
+        const cleanupOutput = window.electron.onStreamOutput(handleStdOutData);
+        const cleanupOutputFull = window.electron.onStreamOutputFull(handleStdOutDataFull);
+        const cleanupError = window.electron.onStreamError(handleErrOutData);
+        const cleanupErrorFull = window.electron.onStreamErrorFull(handleErrOutDataFull);
+
+        try {
+          setEngineOutput(await window.electron.runPythonScript(scriptArgs));
+          setIsMatchRunning(false);
+
+        } finally {
+          setIsMatchRunning(false);
+          cleanupTcpData();
+          cleanupTcpJson();
+          cleanupTcpStatus();
+          cleanupOutput();
+          cleanupOutputFull();
+          cleanupError();
+          cleanupErrorFull();
+        }
 
         try {
           const resultFileContent = await window.electron.readFile(resultFilePath);
           const matchLog = JSON.parse(resultFileContent);
           await window.electron.copyMatch(resultFilePath, num);
-          await window.electron.storeSet("numMatches", (num + 1) % 100000)
+          await window.electron.storeSet("numMatches", (num + 1) % 1000000)
 
           const m = await processData(matchLog);
           setMatchStates(m.match_states);
@@ -155,7 +215,7 @@ function MatchPlayer() {
           <LocalSelector bot1File={bot1File} bot2File={bot2File} setBot1File={setBot1File} setBot2File={setBot2File} />
           <div className="flex flex-col justify-center items-center text-center w-full gap-4 mt-4 mb-4 lg:mb-0">
             <div className="flex p-2 rounded-md bg-zinc-800 w-full text-sm justify-center items-center text-zinc-300">
-                Turn #:<span className="text-zinc-50 font-bold ml-1">{currentMatchStateIndex}</span>
+              Turn #:<span className="text-zinc-50 font-bold ml-1">{currentMatchStateIndex}</span>
             </div>
           </div>
         </div>
@@ -169,15 +229,17 @@ function MatchPlayer() {
             </div>
             <MapSelector onSelectMap={handleSetMap} />
             <Button
-              className={`px-4 py-2 rounded text-sm text-white
-            ${(bot1File && bot2File && map != null)
+            className={`px-4 py-2 rounded text-sm text-white
+              ${isMatchRunning
+                ? 'bg-red-500 hover:bg-red-600'
+                : (bot1File && bot2File && map != null)
                   ? 'bg-green-500 hover:bg-green-600'
                   : 'bg-zinc-600 cursor-not-allowed'}`}
-              disabled={!canStart}
-              onClick={handleBattleStart}
-            >
-              Start Battle
-            </Button>
+            disabled={!canStart && !isMatchRunning}
+            onClick={handleBattleStart}
+          >
+            {isMatchRunning ? 'Stop Match' : 'Start Battle'}
+          </Button>
           </div>
           <Game
             currentMatchStateIndex={currentMatchStateIndex}
