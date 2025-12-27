@@ -22,8 +22,8 @@ let enginePath;
 if (app.isPackaged) {
     enginePath = path.join(process.resourcesPath, 'engine');
 } else {
-    //enginePath = path.join(app.getAppPath(), 'engine');
-    enginePath = path.join(app.getAppPath(), '../engine/2026/engine'); // for michael's local
+    enginePath = path.join(app.getAppPath(), 'engine');
+    //enginePath = path.join(app.getAppPath(), '../engine/2026/engine'); // for michael's local
 }
 
 
