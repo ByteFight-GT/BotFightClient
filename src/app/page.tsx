@@ -1,13 +1,7 @@
 "use client";
 
-import React from 'react';
-
 const HomePage = () => {
-	return (
-		<div>
-			nothing here lol
-		</div>
-	);
+	return null;
 };
 
 export default HomePage;

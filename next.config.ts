@@ -9,7 +9,14 @@ const nextConfig: NextConfig = {
   output: 'export',  // This tells Next.js to generate static files
   images: {
     unoptimized: true,  // Disable image optimization for static export
-  }
+  },
+  redirects: async () => [
+    {
+      source: '/',
+      destination: '/player',
+      permanent: true,
+    },
+  ]
 };
 
 export default nextConfig;
