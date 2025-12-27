@@ -1,10 +1,16 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const fs = require('fs').promises;
-require('@electron/remote/main').initialize();
+import { app, BrowserWindow } from 'electron';
+import path from 'path';
+import { promises as fs } from 'fs';
+import * as remoteMain from '@electron/remote/main/index.js';
+remoteMain.initialize();
 
-const { setupAllHandlers } = require('./ipc');
-const { closePython, closeTCPClient } = require('./ipc/pythonHandlers');
+import { setupAllHandlers } from './ipc/index.ts';
+import { closePython, closeTCPClient } from './ipc/pythonHandlers.ts';
+
+// no __dir name in modules... sad
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let win;
 let store;
@@ -17,6 +23,7 @@ if (app.isPackaged) {
     enginePath = path.join(process.resourcesPath, 'engine');
 } else {
     enginePath = path.join(app.getAppPath(), 'engine');
+    //enginePath = path.join(app.getAppPath(), '../engine/2026/engine'); // for michael's local
 }
 
 
@@ -74,7 +81,7 @@ function createWindow() {
         autoHideMenuBar: true,
     });
 
-    require('@electron/remote/main').enable(win.webContents)
+    remoteMain.enable(win.webContents);
 
     // In your main Electron process (main.js or main.ts)
     if (!app.isPackaged) {
