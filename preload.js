@@ -10,16 +10,16 @@ contextBridge.exposeInMainWorld('electron', {
 
     deleteMap: (mapName) => ipcRenderer.invoke('delete-map', mapName),
     deleteMaps: () => ipcRenderer.invoke('delete-maps'),
-    selectFile: () => ipcRenderer.invoke('dialog:selectFile'),
-    selectFolder: () => ipcRenderer.invoke('dialog:selectFolder'),
+    selectFile: () => ipcRenderer.invoke('dialog:select-file'),
+    selectFolder: () => ipcRenderer.invoke('dialog:select-folder'),
 
     // match handlers
     writeMatch: (num, match) => ipcRenderer.invoke('write-match', num, match),
     getMatches: () => ipcRenderer.invoke('get-matches'),
     deleteMatch: (matchName) => ipcRenderer.invoke('delete-match', matchName),
     deleteMatches: () => ipcRenderer.invoke('delete-matches'),
-    readMatch: (match_json) => ipcRenderer.invoke('read-match', match_json),
-    copyMatch: (sourcefile, num) => ipcRenderer.invoke('copy-match', sourcefile, num),
+    readMatch: (matchJson) => ipcRenderer.invoke('read-match', matchJson),
+    importMatch: (sourceFile, num) => ipcRenderer.invoke('import-match', sourceFile, num),
 
     // python script handlers
     runPythonScript: (args, directoryPath) => ipcRenderer.invoke('run-python-script', args, directoryPath),
