@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { Action } from '../replay/game_engine';
 
 
-export default function MapVis({
-  showSnakeStart, 
+// NOTE: WHEN CONVERTING MOUSEX,MOUSEY to TILE COORDS, NEED TO SWAP
+// SAME GOES FOR WHEN CONVERTING BACK FROM TILE COORDS TO CANVAS
+
+export default function MapBuilderVis({
+  showSpawn, 
   aSpawn,
   bSpawn,
-  startPortal,
-  endPortal,
   mapHeight, mapWidth, 
-  walls, portals,
+  walls, hillGrid,
   cellType,
   setTile,
   rerender
@@ -51,8 +52,9 @@ export default function MapVis({
   
       const cellX = Math.floor(offsetX/cellSize);
       const cellY = Math.floor(offsetY/cellSize);
+
   
-      setTile(cellX, cellY);
+      setTile(cellY, cellX);
     };
     
     const canvas = canvasRef.current;
@@ -74,30 +76,30 @@ export default function MapVis({
     canvas.addEventListener('mouseout', handleMouseOut);
     canvas.addEventListener('click', handleClick);
 
-    const drawTile = (x, y, color) => {
+    const drawTile = (r, c, color) => {
         ctx.fillStyle = color;
-        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
         ctx.strokeStyle = 'black';
-        if(x==mouseCellX && y == mouseCellY){
+        if(c==mouseCellX && r == mouseCellY){
           ctx.lineWidth = 2; 
         } else{
           ctx.lineWidth = 0.25; 
         }
         ctx.strokeRect(
-          x*cellSize+(ctx.lineWidth/2), 
-          y*cellSize+(ctx.lineWidth/2), 
+          c*cellSize+(ctx.lineWidth/2), 
+          r*cellSize+(ctx.lineWidth/2), 
           cellSize-(ctx.lineWidth), 
           cellSize-(ctx.lineWidth)
         );
         
     }
 
-    const drawPortal = (x, y) => {
+    const drawHill = (r, c) => {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.beginPath();
       ctx.arc(
-        x * cellSize + cellSize / 2,
-        y * cellSize + cellSize / 2,
+        c * cellSize + cellSize / 2,
+        r * cellSize + cellSize / 2,
         cellSize / 2,
         0,
         Math.PI * 2
@@ -109,12 +111,12 @@ export default function MapVis({
 
      }
 
-    const drawSnakeHead = (x, y, color, direction) => {
+    const drawPlayer = (r, c, color, direction) => {
         ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(
-          x * cellSize + cellSize / 2,
-          y * cellSize + cellSize / 2,
+          c * cellSize + cellSize / 2,
+          r * cellSize + cellSize / 2,
           cellSize / 2,
           0,
           Math.PI * 2
@@ -127,80 +129,77 @@ export default function MapVis({
         ctx.fillStyle = 'white';
         
         switch(direction) {
+          case Action.NORTH:
+            drawEyes(r + 1/3, c + 1/4, r + 2/3, c + 1/4);
+            break;
           case Action.EAST:
-            drawEyes(x + 3/4, y + 1/3, x + 3/4, y + 2/3);
+            drawEyes(r + 3/4, c + 1/3, r + 3/4, c + 2/3);
             break;
           case Action.WEST:
-            drawEyes(x + 1/4, y + 1/3, x + 1/4, y + 2/3);
-            break;
-          case Action.NORTH:
-            drawEyes(x + 1/3, y + 1/4, x + 2/3, y + 1/4);
+            drawEyes(r + 1/4, c + 1/3, r + 1/4, c + 2/3);
             break;
           case Action.SOUTH:
-            drawEyes(x + 1/3, y + 3/4, x + 2/3, y + 3/4);
+            drawEyes(r + 1/3, c + 3/4, r + 2/3, c + 3/4);
             break;
           case Action.NORTHEAST:
-            drawEyes(x + 2/3, y + 1/3, x + 3/4, y + 1/4);
+            drawEyes(r + 2/3, c + 1/3, r + 3/4, c + 1/4);
             break;
           case Action.NORTHWEST:
-            drawEyes(x + 1/3, y + 1/3, x + 1/4, y + 1/4);
+            drawEyes(r + 1/3, c + 1/3, r + 1/4, c + 1/4);
             break;
           case Action.SOUTHEAST:
-            drawEyes(x + 2/3, y + 2/3, x + 3/4, y + 3/4);
+            drawEyes(r + 2/3, c + 2/3, r + 3/4, c + 3/4);
             break;
           case Action.SOUTHWEST:
-            drawEyes(x + 1/3, y + 2/3, x + 1/4, y + 3/4);
+            drawEyes(r + 1/3, c + 2/3, r + 1/4, c + 3/4);
             break;
         }
        
-        function drawEyes(x1, y1, x2, y2) {
+        function drawEyes(r1, c1, r2, c2) {
             ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(x1 * cellSize, y1 * cellSize, 4, 0, Math.PI * 2);
-            ctx.arc(x2 * cellSize, y2 * cellSize, 4, 0, Math.PI * 2);
+            ctx.arc(c1 * cellSize, r1 * cellSize, 4, 0, Math.PI * 2);
+            ctx.arc(c2 * cellSize, r2 * cellSize, 4, 0, Math.PI * 2);
             ctx.fill();
             
             ctx.fillStyle = 'black';
             ctx.beginPath();
-            ctx.arc(x1 * cellSize, y1 * cellSize, 2, 0, Math.PI * 2);
-            ctx.arc(x2 * cellSize, y2 * cellSize, 2, 0, Math.PI * 2);
+            ctx.arc(c1 * cellSize, r1 * cellSize, 2, 0, Math.PI * 2);
+            ctx.arc(c2 * cellSize, r2 * cellSize, 2, 0, Math.PI * 2);
             ctx.fill();
           }
        }
 
-       const drawWall = (x, y) => {
+       const drawWall = (r, c) => {
         ctx.fillStyle = 'black';
-        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        ctx.fillRect(c * cellSize,r * cellSize, cellSize, cellSize);
        }
 
-       const drawCell = (x, y) => {
-          if(walls != null && walls[y][x]){
-            drawWall(x, y);
-          } 
-          else if(portals != null && portals[y][x] >= 0){
-            drawPortal(x, y)
+       const drawCell = (r, c) => {
+          if(hillGrid != null && hillGrid[r][c] != 0){
+            drawHill(r, c)
+          }
 
+          if(walls != null && walls[r][c]){
+            drawWall(r, c);
           }
-          else if((x == startPortal[0] && y == startPortal[1])||(x == endPortal[0] && y == endPortal[1])){
-            drawPortal(x, y)
+          else if(showSpawn && r == aSpawn[0] && c == aSpawn[1]){
+            drawPlayer(r, c, 'green', Action.NORTH);
           }
-          else if(showSnakeStart && x == aSpawn[0] && y == aSpawn[1]){
-            drawSnakeHead(x, y, 'green', Action.NORTH);
-          }
-          else if(showSnakeStart && x == bSpawn[0] && y == bSpawn[1]){
-            drawSnakeHead(x, y, 'blue', Action.NORTH);
+          else if(showSpawn && r == bSpawn[0] && c == bSpawn[1]){
+            drawPlayer(r, c, 'blue', Action.NORTH);
           }
       }
 
-    for (let y = 0; y < mapHeight; y++) {
-        for (let x = 0; x < mapWidth; x++) {
-            drawTile(x, y, '#B19E4E');
+    for (let r = 0; r < mapHeight; r++) {
+        for (let c = 0; c < mapWidth; c++) {
+            drawTile(r, c, '#B19E4E');
         }
     }
 
-    for (let y = 0; y < mapHeight; y++) {
-        for (let x = 0; x < mapWidth; x++) {
-            drawCell(x, y);
+    for (let r = 0; r < mapHeight; r++) {
+        for (let c = 0; c < mapWidth; c++) {
+            drawCell(r, c);
         }
     }
     return () => {
@@ -212,12 +211,10 @@ export default function MapVis({
   }, [
     aSpawn, 
     bSpawn, 
-    startPortal,
-    endPortal,
     mapHeight, 
     mapWidth, 
     walls, 
-    portals,
+    hillGrid,
     mouseCellX,
     mouseCellY,
     rerender
