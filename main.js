@@ -7,6 +7,7 @@ remoteMain.initialize();
 import { setupAllHandlers } from './ipc/index.ts';
 import { closePython, closeTCPClient } from './ipc/pythonHandlers.ts';
 
+// no __dir name in modules... sad
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

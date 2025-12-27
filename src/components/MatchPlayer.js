@@ -185,7 +185,7 @@ function MatchPlayer() {
         try {
           const resultFileContent = await window.electron.readFile(resultFilePath);
           const matchLog = JSON.parse(resultFileContent);
-          await window.electron.copyMatch(resultFilePath, num);
+          await window.electron.importMatch(resultFilePath, num);
           await window.electron.storeSet("numMatches", (num + 1) % 1000000)
 
           const m = await processData(matchLog);

@@ -9,6 +9,7 @@ const LOCAL_SERVER_SCRIPT = 'local_server.py';
 export let pythonProcess: child_process.ChildProcessWithoutNullStreams | null = null;
 export let tcpClientManager: TcpClientManager | null = null;
 
+/** tries finding a free tcp port by creating a server lol */
 function getFreePort() {
 	return new Promise<number>((resolve, reject) => {
 		const server = net.createServer();
@@ -31,9 +32,7 @@ export function closeTCPClient() {
 	tcpClientManager?.disconnect();
 }
 
-/**
- * Kills `pythonProcess` if its running (forcibly)
- */
+/** Kills `pythonProcess` if its running (forcibly) */
 export function closePython() {
 
 	if (pythonProcess && !pythonProcess.killed) {
@@ -55,6 +54,7 @@ export function closePython() {
 	}
 }
 
+/** general class to manage TCP connection with the python local server that runs matches. */
 class TcpClientManager {
 
 	client: net.Socket | null;
@@ -71,9 +71,7 @@ class TcpClientManager {
 		this.messageBuffer = ''; // For handling partial messages
 	}
 
-	/**
-	 * runs a loop wrapping this._attemptConnect() for retrying on failure
-	 */
+	/** runs a loop wrapping this._attemptConnect() for retrying on failure */
 	async connect(
 		host: string, 
 		port: number, 
@@ -204,10 +202,7 @@ class TcpClientManager {
 	}
 }
 
-
-
 export function setupPythonScriptHandlers(store: ElectronStore, enginePath: string) {
-
 	ipcMain.handle('run-python-script', async (event, scriptArgs) => {
 		console.log('ipcMain.handle called with args:', scriptArgs);
 
@@ -309,7 +304,6 @@ export function setupPythonScriptHandlers(store: ElectronStore, enginePath: stri
 		}
 		return false;
 	});
-
 
 	ipcMain.handle('tcp-disconnect', async (event) => {
 		tcpClientManager?.disconnect();
