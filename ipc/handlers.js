@@ -1,8 +1,8 @@
-const { ipcMain, dialog } = require('electron');
-const fs = require('fs').promises;
-const path = require('path');
+import { ipcMain, dialog } from 'electron';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 
-function setupElectronStoreHandlers(store, enginePath) {
+export function setupElectronStoreHandlers(store, enginePath) {
   ipcMain.handle('store-set', async (event, key, value) => {
     store.set(key, value);
   });
@@ -19,7 +19,7 @@ function setupElectronStoreHandlers(store, enginePath) {
   });
 
   ipcMain.handle('delete-maps', async (event) => {
-    const ogResponse = await fs.readFile(path.join(enginePath, 'config', 'maps.json'));
+    const ogResponse = await fs.readFile(join(enginePath, 'config', 'maps.json'));
     const originalMaps = JSON.parse(ogResponse);
     
     const mapPairs = {};
@@ -32,7 +32,7 @@ function setupElectronStoreHandlers(store, enginePath) {
 }
 
 
-function setupFileHandlers() {
+export function setupFileHandlers() {
   ipcMain.handle('read-file', async (event, filePath) => {
     try {
       const data = await fs.readFile(filePath, 'utf8');
@@ -61,7 +61,7 @@ function setupFileHandlers() {
 }
 
 
-function setupMatchHandlers(matchPath) {
+export function setupMatchHandlers(matchPath) {
   
   ipcMain.handle('get-matches', async (event) => {
     try {
@@ -75,7 +75,7 @@ function setupMatchHandlers(matchPath) {
 
   ipcMain.handle('read-match', async (event, match_json) => {
     try {
-      const data = await fs.readFile(path.join(matchPath, match_json), 'utf8');
+      const data = await fs.readFile(join(matchPath, match_json), 'utf8');
       console.log(data);
       return data;
     } catch (err) {
@@ -86,7 +86,7 @@ function setupMatchHandlers(matchPath) {
 
   ipcMain.handle('load-match', async (event, sourcefile, num) => {
     try {
-      await fs.copyFile(sourcefile, path.join(matchPath, `${num}.json`));
+      await fs.copyFile(sourcefile, join(matchPath, `${num}.json`));
     } catch (error) {
       throw new Error(`Failed to load match: ${error.message}`);
     }
@@ -94,7 +94,7 @@ function setupMatchHandlers(matchPath) {
 
   ipcMain.handle('copy-match', async (event, sourcefile, num) => {
     try {
-      await fs.copyFile(sourcefile, path.join(matchPath, `${num}.json`));
+      await fs.copyFile(sourcefile, join(matchPath, `${num}.json`));
     } catch (error) {
       throw new Error(`Failed to copy match: ${error.message}`);
     }
@@ -102,7 +102,7 @@ function setupMatchHandlers(matchPath) {
 
   ipcMain.handle('delete-match', async (event, file) => {
     console.log("Deleting match:", file);
-    const filePath = path.join(matchPath, file);
+    const filePath = join(matchPath, file);
     await fs.unlink(filePath);
   });
 
@@ -110,7 +110,7 @@ function setupMatchHandlers(matchPath) {
     try {
       const files = await fs.readdir(matchPath);
       for (const file of files) {
-        const filePath = path.join(matchPath, file);
+        const filePath = join(matchPath, file);
         await fs.unlink(filePath);
       }
     } catch (err) {
@@ -118,5 +118,3 @@ function setupMatchHandlers(matchPath) {
     }
   });
 }
-
-module.exports = { setupElectronStoreHandlers, setupFileHandlers, setupMatchHandlers};

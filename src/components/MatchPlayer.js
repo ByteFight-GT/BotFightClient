@@ -11,7 +11,7 @@ import PlayerStats from './PlayerStats';
 import { Button } from '@/components/ui/button';
 import { Bot } from 'lucide-react';
 
-const path = require('path');
+import path from 'path';
 
 function MatchPlayer() {
   const [currentMatchStateIndex, setCurrentMatchStateIndex] = useState(0);
