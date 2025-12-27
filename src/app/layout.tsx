@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import { Toaster } from "@/components/ui/toaster";
+import TabSwitcher from "@/components/TabSwitcher";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -27,7 +30,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <TabSwitcher />
+        
         {children}
+
+        <Toaster />
       </body>
     </html>
   );
