@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import './Navbar.css';
 
-function TabSwitcher() {
+function Navbar() {
   return (
-    <div className="flex-none ml-2 space-x-2 border-gray-300">
+    <div className="navbar-container">
       <Link href="/player">Match Player</Link>
       <Link href="/replayer">Replayer</Link>
       <Link href="/mapbuilder">Map Builder</Link>
@@ -11,4 +12,4 @@ function TabSwitcher() {
   );
 }
 
-export default TabSwitcher;
+export default Navbar;
