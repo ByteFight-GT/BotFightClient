@@ -49,8 +49,8 @@ for the triangle "arrow" on the right side of selected tab.
 ::after is the actual area, ::before is the border
 */
 .navbar-link.selected {
-	--arrow-width: 1rem;
-	--border-width: 3px;
+	--arrow-width: 0.5rem;
+	--border-width: 2px;
 	background-color: hsl(var(--background));
 }
 .navbar-link.selected::after {
@@ -73,7 +73,7 @@ for the triangle "arrow" on the right side of selected tab.
 	top: 50%;
 	transform: translateY(-50%);
 	width: calc(var(--arrow-width) + var(--border-width));
-	height: calc(100% + calc(var(--border-width) * 4));
+	height: calc(100% + calc(var(--border-width) * 6)); /* this multiplier needs to change based on triangle eccentricity */
 	clip-path: polygon(0 0%, 100% 50%, 0 100%);
 	background-color: hsl(var(--border));
 }

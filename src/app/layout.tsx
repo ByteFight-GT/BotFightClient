@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/toaster";
@@ -21,7 +20,7 @@ export default function RootLayout({
       <body className="flex antialiased">
         <Navbar />
         
-        <div className="main-content-container">
+        <div className="w-full">
           {children}
         </div>
 

@@ -1,0 +1,17 @@
+.matchplayer-container {
+	display: grid;
+	grid-template-columns: min(100%, 30rem) 1fr;
+	font-family: var(--font-mono);
+	height: 100%;
+	width: 100%;
+}
+
+.matchplayer-dockers {
+	display: flex;
+	flex-direction: column;
+	border-right: 2px solid hsl(var(--border));
+}
+
+h1 {
+	font-weight: 700;
+}

@@ -68,6 +68,9 @@
     --sponsor-supporter-tier: 60 1% 61%;
     --sponsor-challenger-tier: 343 78% 53%;  
     --sponsor-champion-tier: 316 99% 61%;
+
+    --team-green-color: 130 100% 60%;
+    --team-blue-color: 210 100% 60%;
   }
 
   .dark {
