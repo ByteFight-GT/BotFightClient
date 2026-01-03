@@ -1,6 +1,9 @@
-const { ipcRenderer, contextBridge } = require('electron');
+const { ipcRenderer, contextBridge, shell } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
+
+    openExternal: (url) => shell.openExternal(url),
+
     //electron handlers
     storeSet: (key, value) => ipcRenderer.invoke('store-set', key, value),
     storeGet: (key) => ipcRenderer.invoke('store-get', key),
