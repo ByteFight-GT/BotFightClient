@@ -32,6 +32,9 @@
 	width: 2rem;
 	image-rendering: pixelated;
 }
+.navbar-link.selected .navbar-link-icon {
+	filter: brightness(2) saturate(1.5);
+}
 
 .navbar-link-label {
 	font-size: 0.75rem;
